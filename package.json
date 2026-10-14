@@ -1,0 +1,13 @@
+{
+  "name": "rtma-jobcard",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync": "node scripts/sync-from-dashboard.mjs",
+    "build": "node scripts/check-build.mjs"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.45.4"
+  }
+}

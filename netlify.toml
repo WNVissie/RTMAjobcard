@@ -1,0 +1,24 @@
+[build]
+  publish = "public"
+  command = "npm run build"
+
+[build.environment]
+  # The Supabase URL and anon key are public client values embedded in
+  # public/index.html (same as the RTMA dashboard). SUPABASE_SERVICE_ROLE_KEY
+  # is a real secret: set it in Netlify, never put it in a file.
+  SECRETS_SCAN_OMIT_KEYS = "SUPABASE_ANON_KEY,SUPABASE_URL"
+
+[functions]
+  directory = "netlify/functions"
+
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Cache-Control = "no-cache, must-revalidate"
+    X-Robots-Tag = "noindex, nofollow"
+    Referrer-Policy = "same-origin"

@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>RTMA Job Cards</title>
+  <style>
+    :root {
+      --bg: #f5f7fb; --panel: #ffffff; --ink: #17212f; --muted: #637083; --line: #d7dee8;
+      --blue: #00AEEF; --navy: #0B2265; --green: #16a34a; --amber: #d97706; --red: #dc2626; --violet: #6B2D8B;
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); }
+    input, select, button, textarea { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 6px; min-height: 34px; padding: 7px 10px; font-size: 13px; font-family: inherit; }
+    button { cursor: pointer; font-weight: 600; }
+    button:hover { border-color: var(--blue); color: var(--blue); }
+    button:disabled { color: var(--muted); cursor: not-allowed; opacity: .55; }
+    header.app-header { padding: 14px 24px 10px; display: flex; justify-content: space-between; gap: 18px; align-items: center; flex-wrap: wrap; background: #fff; border-bottom: 1px solid var(--line); }
+    header.app-header h1 { font-size: 22px; margin: 0; font-weight: 700; }
+    .subtitle { color: var(--muted); margin-top: 3px; font-size: 13px; }
+    .app-tabs { display: flex; gap: 6px; padding: 10px 24px 0; background: #fff; border-bottom: 1px solid var(--line); }
+    .app-tabs button { border: 0; border-bottom: 3px solid transparent; border-radius: 0; background: none; padding: 8px 14px; color: var(--muted); }
+    .app-tabs button.active { color: var(--navy); border-bottom-color: var(--navy); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    /* login (same as the RTMA dashboard) */
+    .drill-modal { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 20000; display: flex; align-items: center; justify-content: center; }
+    .drill-modal-box { background: #fff; border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,.22); }
+    .auth-box { width: 92%; max-width: 340px; padding: 24px 22px; display: flex; flex-direction: column; gap: 12px; }
+    .auth-box h2 { margin: 0 0 4px; font-size: 16px; }
+    .auth-box label { font-size: 12px; font-weight: 600; color: var(--muted); display: block; margin-bottom: 4px; }
+    .auth-box input { width: 100%; }
+    .auth-error { color: #b91c1c; font-size: 12px; min-height: 16px; }
+    .user-status { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+    /* bulk */
+    .bulk-wrap { padding: 18px 24px 40px; display: grid; gap: 14px; max-width: 1200px; }
+    .bulk-card { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: grid; gap: 10px; }
+    .bulk-card h2 { margin: 0; font-size: 16px; color: var(--navy); }
+    .bulk-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    #bulkInput { width: 100%; min-height: 120px; font-family: Consolas, monospace; }
+    .bulk-note { font-size: 12px; color: var(--muted); }
+    .bulk-note.bad { color: var(--red); }
+    .bulk-table-wrap { overflow-x: auto; }
+    .bulk-table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+    .bulk-table th, .bulk-table td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; white-space: nowrap; }
+    .bulk-table th { font-size: 11px; text-transform: uppercase; color: var(--muted); }
+    .bulk-print { background: var(--navy); color: #fff; border-color: var(--navy); }
+    .bulk-print:hover { background: #1f3b66; color: #fff; }
+
+{{JC_CSS}}
+
+    @media print {
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      body { background: #fff !important; }
+      body.print-jobcard header.app-header, body.print-jobcard .app-tabs, body.print-jobcard #bulkTab,
+      body.print-jobcard .jc-left-panel, body.print-jobcard #authOverlay { display: none !important; }
+      body.print-jobcard #jobCardTab { display: block !important; }
+      body.print-jobcard .jc-app { display: block !important; }
+      body.print-jobcard .jc-preview-wrap { padding: 0 !important; background: #fff !important; max-height: none !important; overflow: visible !important; }
+      body.print-jobcard .jc-page { box-shadow: none !important; box-sizing: border-box !important; width: 100% !important; max-width: 100% !important; min-height: 0 !important; padding: 0 !important; margin: 0 !important; font-size: 11px !important; }
+      body.print-jobcard .jcp-sig-block, body.print-jobcard .jcp-sig-line-row, body.print-jobcard .jcp-footer { break-inside: avoid; page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div id="authOverlay" class="drill-modal" style="display:flex">
+    <div class="drill-modal-box auth-box">
+      <h2>RTMA Job Cards</h2>
+      <div>
+        <label for="loginEmail">Email</label>
+        <input id="loginEmail" type="email" autocomplete="username" />
+      </div>
+      <div>
+        <label for="loginPassword">Password</label>
+        <input id="loginPassword" type="password" autocomplete="current-password" />
+      </div>
+      <div class="auth-error" id="loginError"></div>
+      <button id="loginBtn" type="button">Sign in</button>
+    </div>
+  </div>
+
+  <header class="app-header">
+    <div style="display:flex;align-items:center;gap:10px">
+      <img src="/coolerco-logo.png" alt="CoolerCo" style="height:48px;width:auto" />
+      <div>
+        <h1><span style="color:var(--blue)">CoolerCo</span> <span style="color:var(--navy)">Job Cards</span></h1>
+        <div class="subtitle">Job cards and logistics notes from live case data. Nothing here is saved to the server.</div>
+      </div>
+    </div>
+    <span class="user-status" id="userStatus" style="display:none">
+      <span id="userStatusEmail"></span>
+      <button id="logoutBtn" type="button">Logout</button>
+    </span>
+  </header>
+  <nav class="app-tabs" role="tablist">
+    <button type="button" class="active" data-app-tab="jobCardTab">Job Card</button>
+    <button type="button" data-app-tab="bulkTab">Bulk Job Cards</button>
+  </nav>
+
+  <main>
+{{JC_HTML}}
+
+    <div class="tab-panel" id="bulkTab">
+      <div class="bulk-wrap">
+        <div class="bulk-card">
+          <h2>Bulk Job Cards</h2>
+          <div class="bulk-note">Paste case numbers (one per line, or separated by commas or spaces), then Load. Up to 200 at a time.</div>
+          <textarea id="bulkInput" placeholder="CAS-3008661-T5X9&#10;CAS-3008662-..."></textarea>
+          <div class="bulk-row">
+            <button type="button" id="bulkLoadBtn">Load cases</button>
+            <button type="button" id="bulkClearBtn">Clear</button>
+            <span class="bulk-note" id="bulkStatus"></span>
+          </div>
+        </div>
+        <div class="bulk-card" id="bulkResults" hidden>
+          <div class="bulk-row">
+            <label class="bulk-note"><input type="checkbox" id="bulkAll" checked> Select all</label>
+            <span class="bulk-note" id="bulkCount"></span>
+            <span style="flex:1"></span>
+            <button type="button" class="bulk-print" id="bulkPrintJobBtn">Print Job Cards</button>
+            <button type="button" class="bulk-print" id="bulkPrintLogBtn">Print Logistics Notes</button>
+          </div>
+          <div class="bulk-note bad" id="bulkMissing"></div>
+          <div class="bulk-table-wrap"><table class="bulk-table">
+            <thead><tr><th></th><th>Case Number</th><th>Case Type</th><th>Point of Sale</th><th>Warehouse / Workshop</th><th>Status</th><th>Technician</th></tr></thead>
+            <tbody id="bulkRows"></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script>
+    // ---- Login: shared RTMA Supabase project, same as the dashboard ----
+    // The anon key is the public client key (safe in the browser). Defaults
+    // keep detectSessionInUrl on, so a launch from the SMART Hub signs in
+    // automatically; the normal email/password form works as well.
+    const SUPABASE_URL = 'https://abgxjfeofgvimmimxvpa.supabase.co';
+    const SUPABASE_ANON_KEY = '{{ANON_KEY}}';
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Every /api call carries the signed-in user's token; the functions check it.
+    const _fetch = window.fetch.bind(window);
+    window.fetch = async (input, init = {}) => {
+      const url = typeof input === 'string' ? input : input.url;
+      if (url.startsWith('/api/')) {
+        const { data: { session } } = await db.auth.getSession();
+        const headers = new Headers(init.headers || {});
+        if (session) headers.set('Authorization', 'Bearer ' + session.access_token);
+        init = { ...init, headers };
+        const response = await _fetch(input, init);
+        if (response.status === 401) showLogin();
+        return response;
+      }
+      return _fetch(input, init);
+    };
+
+    let appStarted = false;
+    function onSignIn(user) {
+      document.getElementById('authOverlay').style.display = 'none';
+      document.getElementById('userStatus').style.display = 'flex';
+      document.getElementById('userStatusEmail').textContent = user.email || '';
+      if (!appStarted) { appStarted = true; startApp(); }
+    }
+    function showLogin() {
+      document.getElementById('authOverlay').style.display = 'flex';
+      document.getElementById('userStatus').style.display = 'none';
+    }
+    // Wait for the whole page (startApp() is defined in the next script).
+    window.addEventListener('DOMContentLoaded', async () => {
+      const { data: { session } } = await db.auth.getSession();
+      if (session) onSignIn(session.user); else showLogin();
+      db.auth.onAuthStateChange((event, session) => {
+        if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') return;
+        if (session) onSignIn(session.user); else showLogin();
+      });
+    });
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const { error } = await db.auth.signInWithPassword({ email, password });
+      document.getElementById('loginError').textContent = error ? error.message : '';
+    });
+    document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginBtn').click(); });
+    document.getElementById('logoutBtn').addEventListener('click', () => db.auth.signOut());
+  </script>
+  <script>
+    // ---- Small helpers the copied dashboard code expects ----
+    const appState = { repairs: [] };
+    function escapeAttr(v) {
+      return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    function shortDate(v) { return v ? String(v).slice(0, 10) : ''; }
+    async function readJsonResponse(response, fallback) {
+      const text = await response.text();
+      let result = {};
+      if (text) { try { result = JSON.parse(text); } catch (err) { result = { error: text.slice(0, 500) }; } }
+      if (!response.ok) throw new Error(result.error || `${fallback} (${response.status} ${response.statusText})`);
+      return result;
+    }
+
+    // ---- Job Card (copied from the RTMA dashboard, scripts/build-page.mjs) ----
+{{JC_JS}}
+
+    // ---- Bulk Job Cards (copied from the RTMA dashboard, scripts/build-page.mjs) ----
+{{BULK_JS}}
+
+    // ---- Bulk tab: paste case numbers -> pick -> print ----
+    const bulkState = { rows: [] };
+    function bulkSelectedRows() {
+      const ticked = new Set([...document.querySelectorAll('#bulkRows input[type=checkbox]:checked')].map(cb => Number(cb.dataset.idx)));
+      return bulkState.rows.filter((_, i) => ticked.has(i));
+    }
+    function bulkUpdateCount() {
+      const n = bulkSelectedRows().length;
+      document.getElementById('bulkCount').textContent = `${n} of ${bulkState.rows.length} selected`;
+      document.getElementById('bulkPrintJobBtn').disabled = !n;
+      document.getElementById('bulkPrintLogBtn').disabled = !n;
+    }
+    function parseCaseList(text) {
+      return [...new Set(String(text || '').split(/[\s,;]+/).map(s => s.trim()).filter(Boolean))];
+    }
+    async function bulkLoad() {
+      const list = parseCaseList(document.getElementById('bulkInput').value);
+      const status = document.getElementById('bulkStatus');
+      if (!list.length) { status.textContent = 'Paste at least one case number.'; return; }
+      if (list.length > 200) { status.textContent = `${list.length} case numbers - load at most 200 at a time.`; return; }
+      status.textContent = `Loading ${list.length} case(s)...`;
+      document.getElementById('bulkLoadBtn').disabled = true;
+      try {
+        const response = await fetch('/api/jobcard-cases?caseNumbers=' + list.map(encodeURIComponent).join(','), { cache: 'no-store' });
+        const data = await readJsonResponse(response, 'Case lookup unavailable');
+        bulkState.rows = data.cases || [];
+        document.getElementById('bulkRows').innerHTML = bulkState.rows.map((r, i) => `<tr>
+          <td><input type="checkbox" data-idx="${i}" checked></td>
+          <td>${escapeAttr(r['Case Number'])}</td><td>${escapeAttr(r['Case Type'])}</td>
+          <td>${escapeAttr(r['Point of Sale'])}</td><td>${escapeAttr(r['Warehouse / Workshop'])}</td>
+          <td>${escapeAttr(r['Status Reason'])}</td><td>${escapeAttr(r['Technician Routed To'] || 'Unrouted')}</td></tr>`).join('');
+        const missing = data.missing || [];
+        document.getElementById('bulkMissing').textContent = missing.length ? `Not found (${missing.length}): ${missing.join(', ')}` : '';
+        document.getElementById('bulkAll').checked = true;
+        document.getElementById('bulkResults').hidden = false;
+        status.textContent = `${bulkState.rows.length} case(s) loaded.`;
+        bulkUpdateCount();
+      } catch (err) {
+        status.textContent = 'Could not load cases: ' + (err.message || err);
+      } finally {
+        document.getElementById('bulkLoadBtn').disabled = false;
+      }
+    }
+
+    function showAppTab(id) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === id));
+      document.querySelectorAll('[data-app-tab]').forEach(b => b.classList.toggle('active', b.dataset.appTab === id));
+    }
+
+    // Runs once, after sign-in. Links from the dashboard can pre-fill:
+    //   ?case=CAS-1                      -> Job Card tab, case searched
+    //   ?cases=CAS-1,CAS-2               -> Bulk tab, cases loaded
+    function startApp() {
+      document.querySelectorAll('[data-app-tab]').forEach(b => b.addEventListener('click', () => showAppTab(b.dataset.appTab)));
+      document.getElementById('jobCardTab').classList.add('active');
+      initJobCard();
+      document.getElementById('bulkLoadBtn').addEventListener('click', bulkLoad);
+      document.getElementById('bulkClearBtn').addEventListener('click', () => {
+        document.getElementById('bulkInput').value = '';
+        document.getElementById('bulkResults').hidden = true;
+        document.getElementById('bulkStatus').textContent = '';
+        bulkState.rows = [];
+      });
+      document.getElementById('bulkAll').addEventListener('change', e => {
+        document.querySelectorAll('#bulkRows input[type=checkbox]').forEach(cb => { cb.checked = e.target.checked; });
+        bulkUpdateCount();
+      });
+      document.getElementById('bulkRows').addEventListener('change', bulkUpdateCount);
+      document.getElementById('bulkPrintJobBtn').addEventListener('click', () => printBulkCaseDocuments('jobcard'));
+      document.getElementById('bulkPrintLogBtn').addEventListener('click', () => printBulkCaseDocuments('logistics'));
+
+      const params = new URLSearchParams(location.search);
+      if (params.get('cases')) {
+        showAppTab('bulkTab');
+        document.getElementById('bulkInput').value = parseCaseList(params.get('cases')).join('\n');
+        bulkLoad();
+      } else if (params.get('case')) {
+        document.getElementById('jcSearchInput').value = params.get('case');
+        jcSearchCase();
+      }
+    }
+  </script>
+</body>
+</html>

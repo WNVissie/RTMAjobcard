@@ -1,0 +1,1235 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>RTMA Job Cards</title>
+  <style>
+    :root {
+      --bg: #f5f7fb; --panel: #ffffff; --ink: #17212f; --muted: #637083; --line: #d7dee8;
+      --blue: #00AEEF; --navy: #0B2265; --green: #16a34a; --amber: #d97706; --red: #dc2626; --violet: #6B2D8B;
+      font-family: "Segoe UI", Arial, sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--bg); color: var(--ink); }
+    input, select, button, textarea { border: 1px solid var(--line); background: #fff; color: var(--ink); border-radius: 6px; min-height: 34px; padding: 7px 10px; font-size: 13px; font-family: inherit; }
+    button { cursor: pointer; font-weight: 600; }
+    button:hover { border-color: var(--blue); color: var(--blue); }
+    button:disabled { color: var(--muted); cursor: not-allowed; opacity: .55; }
+    header.app-header { padding: 14px 24px 10px; display: flex; justify-content: space-between; gap: 18px; align-items: center; flex-wrap: wrap; background: #fff; border-bottom: 1px solid var(--line); }
+    header.app-header h1 { font-size: 22px; margin: 0; font-weight: 700; }
+    .subtitle { color: var(--muted); margin-top: 3px; font-size: 13px; }
+    .app-tabs { display: flex; gap: 6px; padding: 10px 24px 0; background: #fff; border-bottom: 1px solid var(--line); }
+    .app-tabs button { border: 0; border-bottom: 3px solid transparent; border-radius: 0; background: none; padding: 8px 14px; color: var(--muted); }
+    .app-tabs button.active { color: var(--navy); border-bottom-color: var(--navy); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    /* login (same as the RTMA dashboard) */
+    .drill-modal { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 20000; display: flex; align-items: center; justify-content: center; }
+    .drill-modal-box { background: #fff; border-radius: 10px; box-shadow: 0 8px 32px rgba(0,0,0,.22); }
+    .auth-box { width: 92%; max-width: 340px; padding: 24px 22px; display: flex; flex-direction: column; gap: 12px; }
+    .auth-box h2 { margin: 0 0 4px; font-size: 16px; }
+    .auth-box label { font-size: 12px; font-weight: 600; color: var(--muted); display: block; margin-bottom: 4px; }
+    .auth-box input { width: 100%; }
+    .auth-error { color: #b91c1c; font-size: 12px; min-height: 16px; }
+    .user-status { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+    /* bulk */
+    .bulk-wrap { padding: 18px 24px 40px; display: grid; gap: 14px; max-width: 1200px; }
+    .bulk-card { background: #fff; border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: grid; gap: 10px; }
+    .bulk-card h2 { margin: 0; font-size: 16px; color: var(--navy); }
+    .bulk-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    #bulkInput { width: 100%; min-height: 120px; font-family: Consolas, monospace; }
+    .bulk-note { font-size: 12px; color: var(--muted); }
+    .bulk-note.bad { color: var(--red); }
+    .bulk-table-wrap { overflow-x: auto; }
+    .bulk-table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+    .bulk-table th, .bulk-table td { border-bottom: 1px solid var(--line); padding: 6px 8px; text-align: left; white-space: nowrap; }
+    .bulk-table th { font-size: 11px; text-transform: uppercase; color: var(--muted); }
+    .bulk-print { background: var(--navy); color: #fff; border-color: var(--navy); }
+    .bulk-print:hover { background: #1f3b66; color: #fff; }
+
+    /* ---- Job Card Generator ---- */
+    .jc-app { display: grid; grid-template-columns: 440px 1fr; min-height: calc(100vh - 90px); }
+    @media (max-width: 1000px) { .jc-app { grid-template-columns: 1fr; } }
+    .jc-left-panel { background: #fff; border-right: 1px solid var(--line); max-height: calc(100vh - 90px); display: flex; flex-direction: column; }
+    .jc-left-scroll { padding: 16px 18px 12px; overflow-y: auto; overflow-x: hidden; flex: 1 1 auto; min-height: 0; }
+    .jc-left-footer { flex: 0 0 auto; padding: 10px 18px 16px; border-top: 1px solid var(--line); background: #fff; }
+    .jc-brand strong { font-size: 15px; color: var(--navy); }
+    .jc-brand p { font-size: 11px; color: var(--muted); margin: 2px 0 0; }
+    .jc-section { margin-top: 16px; border-top: 1px solid var(--line); padding-top: 12px; }
+    .jc-section-label { font-size: 11px; text-transform: uppercase; letter-spacing: .07em; color: var(--violet); font-weight: 800; margin-bottom: 8px; }
+    .jc-search-row { display: flex; gap: 8px; }
+    .jc-search-row input { flex: 1; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; font-size: 13px; font-family: inherit; }
+    .jc-hint { font-size: 11px; color: var(--muted); margin-top: 5px; line-height: 1.5; }
+    .jc-field { margin-bottom: 8px; }
+    .jc-field label { display: block; font-size: 11px; color: var(--muted); font-weight: 700; margin-bottom: 3px; }
+    .jc-field input[type=text], .jc-field textarea { width: 100%; padding: 7px 9px; border: 1px solid var(--line); border-radius: 6px; font-size: 12.5px; font-family: inherit; background: #fdfdfc; color: var(--ink); }
+    .jc-field textarea { resize: vertical; min-height: 38px; }
+    .jc-row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .jc-edit-table { width: 100%; border-collapse: collapse; font-size: 11.5px; margin-top: 5px; }
+    .jc-edit-table th { text-align: left; font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; padding: 3px 3px; border-bottom: 1px solid var(--line); }
+    .jc-edit-table td { padding: 2px 2px; vertical-align: top; }
+    .jc-edit-table input { width: 100%; padding: 5px 6px; border: 1px solid var(--line); border-radius: 4px; font-size: 11.5px; font-family: inherit; background: #fdfdfc; }
+    .jc-rm-row { background: none; border: none; color: #b3413a; cursor: pointer; font-size: 14px; font-weight: 700; padding: 0 4px; }
+    .jc-add-row-btn { margin-top: 5px; border: 1px dashed var(--line); background: #fafaf9; color: var(--navy); font-size: 11.5px; font-weight: 600; padding: 5px 10px; border-radius: 5px; cursor: pointer; width: 100%; }
+    .jc-add-row-btn:hover { border-color: var(--violet); color: var(--violet); }
+    .jc-dropzone { display: block; border: 1.5px dashed var(--line); border-radius: 7px; padding: 12px; text-align: center; font-size: 11.5px; color: var(--muted); cursor: pointer; background: #fafaf9; margin-top: 6px; }
+    .jc-dropzone:hover { border-color: var(--violet); background: #f5f0ff; }
+    .jc-dropzone input { display: none; }
+    .jc-dropzone strong { display: block; color: var(--navy); font-size: 12px; margin-bottom: 2px; }
+    .jc-file-pill { display: inline-flex; align-items: center; gap: 5px; background: #ede9fe; color: var(--violet); border-radius: 12px; padding: 2px 9px; font-size: 11px; margin: 4px 3px 0 0; font-weight: 600; }
+    .jc-file-pill button { border: none; background: none; color: var(--violet); cursor: pointer; font-size: 13px; line-height: 1; padding: 0; font-weight: 700; }
+    .jc-sig-tools { display: flex; gap: 8px; margin-top: 8px; }
+    .jc-sig-tools button { flex: 1; padding: 6px; border-radius: 5px; border: 1px solid var(--line); background: #fafaf9; font-size: 11.5px; font-weight: 600; color: var(--navy); cursor: pointer; }
+    .jc-sig-tools button:hover { border-color: var(--violet); color: var(--violet); }
+    #jcSigPad { width: 100%; height: 110px; border: 1.5px dashed var(--line); border-radius: 7px; background: #fdfdfc; touch-action: none; cursor: crosshair; display: block; margin-top: 8px; }
+    .jc-print-btn { width: 100%; padding: 12px; background: var(--navy); color: #fff; border: none; border-radius: 7px; font-size: 14px; font-weight: 700; cursor: pointer; transition: background .15s; }
+    .jc-print-btn:hover { background: #1f3b66; }
+    .jc-print-btn.jc-print-btn--used { background: var(--green); }
+    .jc-print-btn.jc-print-btn--used:hover { background: #0e7d38; }
+    .jc-note-footer { font-size: 10px; color: var(--muted); text-align: center; margin-bottom: 8px; }
+    /* Preview */
+    .jc-preview-wrap { padding: 24px 28px; background: #e8e6df; display: flex; flex-direction: column; align-items: center; overflow-y: auto; max-height: calc(100vh - 90px); }
+    /* box-sizing:border-box so padding is included in the 700px width — prevents overflow on A4 portrait print */
+    .jc-page { background: #fff; box-sizing: border-box; width: 660px; max-width: 100%; min-height: 940px; box-shadow: 0 4px 18px rgba(0,0,0,.14); padding: 24px 24px; margin-bottom: 20px; font-size: 12px; color: #1c1c1c; overflow: hidden; }
+    .jcp-head { text-align: center; margin-bottom: 10px; border-bottom: 2px solid #0B2265; padding-bottom: 8px; }
+    .jcp-org { font-size: 10px; letter-spacing: .14em; color: #c1511f; text-transform: uppercase; font-weight: 800; margin-bottom: 2px; }
+    .jcp-title { font-size: 21px; font-weight: 900; color: #0B2265; margin: 0; }
+    .jcp-sub { font-size: 9.5px; color: #888; margin-top: 2px; }
+    .jcp-banner-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; background: #0B2265; color: #fff; padding: 5px 9px; margin: 10px 0 4px; font-size: 10.5px; border-radius: 3px; }
+    .jcp-banner-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .jcp-section-bar { background: #0B2265; color: #fff; font-size: 10.5px; font-weight: 700; padding: 3px 8px; margin: 10px 0 4px; letter-spacing: .03em; }
+    .jcp-kv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 14px; margin-bottom: 3px; }
+    .jcp-kv { font-size: 11.5px; margin-bottom: 2px; word-break: break-word; }
+    .jcp-kv b { display: block; font-size: 9px; color: #888; text-transform: uppercase; letter-spacing: .04em; font-weight: 700; }
+    /* table-layout:fixed with explicit pixel widths on th keeps columns within the page */
+    .jcp-table { width: 100%; max-width: 100%; border-collapse: collapse; margin-bottom: 2px; font-size: 11px; table-layout: fixed; }
+    .jcp-table th { background: #e8e8e8; text-align: left; padding: 3px 6px; font-size: 9.5px; text-transform: uppercase; letter-spacing: .02em; overflow: hidden; border-bottom: 1px solid #bbb; }
+    .jcp-table td { padding: 4px 6px; word-break: break-word; overflow-wrap: break-word; overflow: hidden; border-bottom: 1px solid #e0e0e0; }
+    .jcp-empty-row td { color: #999; font-style: italic; }
+    .jcp-photo-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 4px; }
+    .jcp-photo { width: 100%; border: 1px solid #333; display: block; }
+    .jcp-photo-empty { border: 1px dashed #ccc; color: #aaa; font-size: 11px; padding: 14px; text-align: center; }
+    .jcp-sig-img { max-width: 240px; max-height: 90px; border-bottom: 1px solid #333; display: block; margin-top: 4px; }
+    .jcp-sig-blank { width: 240px; height: 70px; border-bottom: 1px solid #333; }
+    .jcp-sig-caption { font-size: 9.5px; color: #888; margin-top: 3px; }
+    .jcp-sig-line-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 16px; }
+    .jcp-sig-line-box { height: 48px; border-bottom: 1px solid #333; }
+    .jcp-sig-label { font-size: 9.5px; color: #666; margin-top: 3px; }
+    .jcp-footer { margin-top: 20px; font-size: 9px; color: #bbb; text-align: center; border-top: 1px solid #eee; padding-top: 6px; }
+    /* Mode toggle */
+    .jc-mode-toggle { display: flex; gap: 8px; margin-top: 12px; }
+    .jc-mode-toggle button { flex: 1; padding: 9px 6px; border: 2px solid var(--line); border-radius: 7px; background: #fafaf9; color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; font-family: inherit; transition: background .15s, color .15s, font-weight .15s; }
+    .jc-mode-toggle button[data-jc-mode-btn="repair"] { border-color: var(--red); color: var(--red); }
+    .jc-mode-toggle button[data-jc-mode-btn="logistics"] { border-color: var(--green); color: var(--green); }
+    .jc-mode-toggle button[data-jc-mode-btn="repair"]:hover { background: #fdeceb; font-weight: 800; }
+    .jc-mode-toggle button[data-jc-mode-btn="logistics"]:hover { background: #e9f9ee; font-weight: 800; }
+    .jc-mode-toggle button[data-jc-mode-btn="repair"].active { background: var(--red); color: #fff; }
+    .jc-mode-toggle button[data-jc-mode-btn="logistics"].active { background: var(--green); color: #fff; }
+    /* Logistics service note preview */
+    .jcn-head { text-align: center; margin-bottom: 14px; border-bottom: 2px solid #0B2265; padding-bottom: 10px; }
+    .jcn-title { font-size: 18px; font-weight: 900; color: #0B2265; letter-spacing: .01em; }
+    .jcn-meta-row { display: grid; grid-template-columns: auto 1fr auto 1fr; gap: 3px 10px; margin: 8px 0 4px; font-size: 11.5px; align-items: baseline; }
+    .jcn-lbl { font-weight: 700; color: #1c1c1c; white-space: nowrap; }
+    .jcn-val { color: #1c1c1c; }
+    .jcn-section-title { font-weight: 700; font-size: 12.5px; color: #1c1c1c; margin: 12px 0 4px; }
+    .jcn-kv-row { display: grid; grid-template-columns: 130px 1fr; gap: 2px 8px; font-size: 11.5px; margin-bottom: 3px; min-width: 0; }
+    .jcn-kv-row .jcn-lbl { color: #2563b0; min-width: 0; }
+    .jcn-kv-row .jcn-val { word-break: break-word; overflow-wrap: break-word; min-width: 0; }
+    .jcn-asset-box { border: 1.5px solid #0B2265; border-radius: 3px; padding: 8px 10px; margin: 10px 0 6px; }
+    .jcn-asset-title { font-weight: 700; font-size: 12px; color: #1c1c1c; margin-bottom: 6px; }
+    .jcn-asset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 14px; min-width: 0; }
+    .jcn-sig-page { page-break-before: always; padding-top: 20px; }
+    .jcn-sig-page .jcn-head { margin-bottom: 24px; }
+    .jcn-sig-big { font-weight: 700; font-size: 12.5px; margin-bottom: 10px; }
+    .jcn-sig-img { max-width: 340px; max-height: 220px; display: block; }
+    .jcn-sig-blank-big { width: 100%; height: 220px; border-bottom: 1.5px solid #333; }
+    .jcn-footer { margin-top: 20px; font-size: 9px; color: #bbb; text-align: center; border-top: 1px solid #eee; padding-top: 6px; }
+
+    @media print {
+      * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+      body { background: #fff !important; }
+      body.print-jobcard header.app-header, body.print-jobcard .app-tabs, body.print-jobcard #bulkTab,
+      body.print-jobcard .jc-left-panel, body.print-jobcard #authOverlay { display: none !important; }
+      body.print-jobcard #jobCardTab { display: block !important; }
+      body.print-jobcard .jc-app { display: block !important; }
+      body.print-jobcard .jc-preview-wrap { padding: 0 !important; background: #fff !important; max-height: none !important; overflow: visible !important; }
+      body.print-jobcard .jc-page { box-shadow: none !important; box-sizing: border-box !important; width: 100% !important; max-width: 100% !important; min-height: 0 !important; padding: 0 !important; margin: 0 !important; font-size: 11px !important; }
+      body.print-jobcard .jcp-sig-block, body.print-jobcard .jcp-sig-line-row, body.print-jobcard .jcp-footer { break-inside: avoid; page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div id="authOverlay" class="drill-modal" style="display:flex">
+    <div class="drill-modal-box auth-box">
+      <h2>RTMA Job Cards</h2>
+      <div>
+        <label for="loginEmail">Email</label>
+        <input id="loginEmail" type="email" autocomplete="username" />
+      </div>
+      <div>
+        <label for="loginPassword">Password</label>
+        <input id="loginPassword" type="password" autocomplete="current-password" />
+      </div>
+      <div class="auth-error" id="loginError"></div>
+      <button id="loginBtn" type="button">Sign in</button>
+    </div>
+  </div>
+
+  <header class="app-header">
+    <div style="display:flex;align-items:center;gap:10px">
+      <img src="/coolerco-logo.png" alt="CoolerCo" style="height:48px;width:auto" />
+      <div>
+        <h1><span style="color:var(--blue)">CoolerCo</span> <span style="color:var(--navy)">Job Cards</span></h1>
+        <div class="subtitle">Job cards and logistics notes from live case data. Nothing here is saved to the server.</div>
+      </div>
+    </div>
+    <span class="user-status" id="userStatus" style="display:none">
+      <span id="userStatusEmail"></span>
+      <button id="logoutBtn" type="button">Logout</button>
+    </span>
+  </header>
+  <nav class="app-tabs" role="tablist">
+    <button type="button" class="active" data-app-tab="jobCardTab">Job Card</button>
+    <button type="button" data-app-tab="bulkTab">Bulk Job Cards</button>
+  </nav>
+
+  <main>
+    <div class="tab-panel" id="jobCardTab">
+      <div class="jc-app">
+        <!-- LEFT: Form -->
+        <div class="jc-left-panel" id="jcLeftPanel">
+         <div class="jc-left-scroll">
+          <div class="jc-brand">
+            <strong>Job Card Generator</strong>
+            <p>Search a case number to auto-fill from case data and asset repair history</p>
+          </div>
+          <div class="jc-mode-toggle">
+            <button type="button" data-jc-mode-btn="repair" class="active">Repair Job Card</button>
+            <button type="button" data-jc-mode-btn="logistics">Logistics Service Note</button>
+          </div>
+
+          <div class="jc-section">
+            <div class="jc-section-label">Search Case</div>
+            <div class="jc-search-row">
+              <input type="text" id="jcSearchInput" placeholder="Enter case number..." />
+              <button type="button" id="jcSearchBtn" class="btn-primary">Search</button>
+            </div>
+            <div id="jcSearchStatus" class="jc-hint"></div>
+          </div>
+
+          <div class="jc-section">
+            <div class="jc-section-label">Service &amp; Location</div>
+            <div class="jc-row2">
+              <div class="jc-field"><label>Case Number</label><input type="text" id="jc_caseno"></div>
+              <div class="jc-field"><label>Service Type</label><input type="text" id="jc_servicetype"></div>
+            </div>
+            <div class="jc-field"><label>Point of Sale</label><input type="text" id="jc_pos"></div>
+            <div class="jc-row2">
+              <div class="jc-field"><label>Local Code</label><input type="text" id="jc_localcode"></div>
+              <div class="jc-field"><label>Warehouse / Workshop</label><input type="text" id="jc_warehouse"></div>
+            </div>
+            <div class="jc-field"><label>Address</label><textarea id="jc_address" rows="2"></textarea></div>
+          </div>
+
+          <div class="jc-section">
+            <div class="jc-section-label">Service Dates</div>
+            <div class="jc-row2">
+              <div class="jc-field"><label>Begin Date</label><input type="text" id="jc_begin"></div>
+              <div class="jc-field"><label>End Date</label><input type="text" id="jc_end"></div>
+            </div>
+            <div class="jc-row2">
+              <div class="jc-field"><label>Service Date (display)</label><input type="text" id="jc_servicedate"></div>
+              <div class="jc-field"><label id="jcTechLabel">Technician</label><input type="text" id="jc_tech"></div>
+            </div>
+          </div>
+
+          <div class="jc-section" data-jc-mode="repair">
+            <div class="jc-section-label">Asset Information</div>
+            <div class="jc-row2">
+              <div class="jc-field"><label>Barcode</label><input type="text" id="jc_barcode"></div>
+              <div class="jc-field"><label>Asset Name</label><input type="text" id="jc_assetname"></div>
+            </div>
+            <div class="jc-row2">
+              <div class="jc-field"><label>Asset Type / Model</label><input type="text" id="jc_assettype"></div>
+              <div class="jc-field"><label>Condition</label><input type="text" id="jc_condition"></div>
+            </div>
+          </div>
+
+          <div class="jc-section" data-jc-mode="logistics" style="display:none">
+            <div class="jc-section-label">Asset Delivered</div>
+            <div class="jc-row2">
+              <div class="jc-field"><label>Barcode</label><input type="text" id="jc_del_barcode"></div>
+              <div class="jc-field"><label>Brand</label><input type="text" id="jc_del_brand"></div>
+            </div>
+            <div class="jc-row2">
+              <div class="jc-field"><label>Model</label><input type="text" id="jc_del_model"></div>
+              <div class="jc-field"><label>Condition</label><input type="text" id="jc_del_condition"></div>
+            </div>
+          </div>
+
+          <div class="jc-section" data-jc-mode="logistics" style="display:none">
+            <div class="jc-section-label">Asset Removed</div>
+            <div class="jc-row2">
+              <div class="jc-field"><label>Barcode</label><input type="text" id="jc_rem_barcode"></div>
+              <div class="jc-field"><label>Brand</label><input type="text" id="jc_rem_brand"></div>
+            </div>
+            <div class="jc-row2">
+              <div class="jc-field"><label>Model</label><input type="text" id="jc_rem_model"></div>
+              <div class="jc-field"><label>Condition</label><input type="text" id="jc_rem_condition"></div>
+            </div>
+          </div>
+
+          <div class="jc-section" data-jc-mode="repair">
+            <div class="jc-section-label">Asset Repair History (Last 6 Months)</div>
+            <div id="jcHistoryNote" class="jc-hint" style="display:none"></div>
+            <table class="jc-edit-table" id="jcTblHistory">
+              <thead><tr><th>Date</th><th>Repair / Event</th><th>Outcome</th><th></th></tr></thead>
+              <tbody></tbody>
+            </table>
+            <button class="jc-add-row-btn" data-jc-table="jcTblHistory" data-jc-cols="3">+ Add row</button>
+          </div>
+
+          <div class="jc-section" data-jc-mode="repair">
+            <div class="jc-section-label">Repairs Performed (This Case)</div>
+            <div id="jcRepairsNote" class="jc-hint" style="display:none"></div>
+            <table class="jc-edit-table" id="jcTblRepairs">
+              <thead><tr><th>Repair Code</th><th>Repair Name</th><th></th></tr></thead>
+              <tbody></tbody>
+            </table>
+            <button class="jc-add-row-btn" data-jc-table="jcTblRepairs" data-jc-cols="2">+ Add row</button>
+          </div>
+
+          <div class="jc-section" data-jc-mode="repair">
+            <div class="jc-section-label">Symptoms</div>
+            <table class="jc-edit-table" id="jcTblSymptoms">
+              <thead><tr><th>Symptom</th><th>Notes</th><th></th></tr></thead>
+              <tbody></tbody>
+            </table>
+            <button class="jc-add-row-btn" data-jc-table="jcTblSymptoms" data-jc-cols="2">+ Add row</button>
+          </div>
+
+          <!-- Faults Found hidden for now (still being developed) - same as the bulk job cards. -->
+          <div class="jc-section" data-jc-mode="repair" hidden>
+            <div class="jc-section-label">Faults Found</div>
+            <table class="jc-edit-table" id="jcTblFaults">
+              <thead><tr><th>Fault</th><th>Notes</th><th></th></tr></thead>
+              <tbody></tbody>
+            </table>
+            <button class="jc-add-row-btn" data-jc-table="jcTblFaults" data-jc-cols="2">+ Add row</button>
+          </div>
+
+          <div class="jc-section">
+            <div class="jc-section-label">Asset Photos</div>
+            <label class="jc-dropzone" id="jcPhotoDrop">
+              <strong>Upload photos (JPG / PNG)</strong>
+              Click or drag — multiple allowed. Photos are NOT saved to the server.
+              <input type="file" id="jcPhotoInput" accept="image/*" multiple>
+            </label>
+            <div id="jcPhotoPills"></div>
+          </div>
+
+          <div class="jc-section">
+            <div class="jc-section-label">Signature</div>
+            <label class="jc-dropzone" id="jcSigDrop">
+              <strong>Upload a signature image</strong>
+              If a scanned signature is available
+              <input type="file" id="jcSigInput" accept="image/*">
+            </label>
+            <div id="jcSigPill"></div>
+            <div class="jc-hint" style="margin-top:8px">Or draw the signature below:</div>
+            <canvas id="jcSigPad" width="540" height="150"></canvas>
+            <div class="jc-sig-tools">
+              <button type="button" id="jcSigClear">Clear drawing</button>
+              <button type="button" id="jcSigUse">Use drawn signature</button>
+            </div>
+            <div class="jc-field" style="margin-top:10px">
+              <label>If no signature — note why</label>
+              <input type="text" id="jc_signote" placeholder="e.g. Shop owner unavailable on collection">
+            </div>
+          </div>
+
+         </div>
+          <div class="jc-left-footer">
+            <div class="jc-note-footer">This job card is NOT saved to the server. Use Print / Save as PDF to keep a copy.</div>
+            <button class="jc-print-btn" id="jcPrintBtn">Print / Save as PDF</button>
+          </div>
+        </div>
+
+        <!-- RIGHT: Live Preview -->
+        <div class="jc-preview-wrap">
+          <div class="jc-page" id="jcPage"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="bulkTab">
+      <div class="bulk-wrap">
+        <div class="bulk-card">
+          <h2>Bulk Job Cards</h2>
+          <div class="bulk-note">Paste case numbers (one per line, or separated by commas or spaces), then Load. Up to 200 at a time.</div>
+          <textarea id="bulkInput" placeholder="CAS-3008661-T5X9&#10;CAS-3008662-..."></textarea>
+          <div class="bulk-row">
+            <button type="button" id="bulkLoadBtn">Load cases</button>
+            <button type="button" id="bulkClearBtn">Clear</button>
+            <span class="bulk-note" id="bulkStatus"></span>
+          </div>
+        </div>
+        <div class="bulk-card" id="bulkResults" hidden>
+          <div class="bulk-row">
+            <label class="bulk-note"><input type="checkbox" id="bulkAll" checked> Select all</label>
+            <span class="bulk-note" id="bulkCount"></span>
+            <span style="flex:1"></span>
+            <button type="button" class="bulk-print" id="bulkPrintJobBtn">Print Job Cards</button>
+            <button type="button" class="bulk-print" id="bulkPrintLogBtn">Print Logistics Notes</button>
+          </div>
+          <div class="bulk-note bad" id="bulkMissing"></div>
+          <div class="bulk-table-wrap"><table class="bulk-table">
+            <thead><tr><th></th><th>Case Number</th><th>Case Type</th><th>Point of Sale</th><th>Warehouse / Workshop</th><th>Status</th><th>Technician</th></tr></thead>
+            <tbody id="bulkRows"></tbody>
+          </table></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+  <script>
+    // ---- Login: shared RTMA Supabase project, same as the dashboard ----
+    // The anon key is the public client key (safe in the browser). Defaults
+    // keep detectSessionInUrl on, so a launch from the SMART Hub signs in
+    // automatically; the normal email/password form works as well.
+    const SUPABASE_URL = 'https://abgxjfeofgvimmimxvpa.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFiZ3hqZmVvZmd2aW1taW14dnBhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAxNTU5OTMsImV4cCI6MjA5NTczMTk5M30.2RicfUihbRN67SM3uXXcMfJTrW6TrBNj7-ELDindQWw';
+    const db = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Every /api call carries the signed-in user's token; the functions check it.
+    const _fetch = window.fetch.bind(window);
+    window.fetch = async (input, init = {}) => {
+      const url = typeof input === 'string' ? input : input.url;
+      if (url.startsWith('/api/')) {
+        const { data: { session } } = await db.auth.getSession();
+        const headers = new Headers(init.headers || {});
+        if (session) headers.set('Authorization', 'Bearer ' + session.access_token);
+        init = { ...init, headers };
+        const response = await _fetch(input, init);
+        if (response.status === 401) showLogin();
+        return response;
+      }
+      return _fetch(input, init);
+    };
+
+    let appStarted = false;
+    function onSignIn(user) {
+      document.getElementById('authOverlay').style.display = 'none';
+      document.getElementById('userStatus').style.display = 'flex';
+      document.getElementById('userStatusEmail').textContent = user.email || '';
+      if (!appStarted) { appStarted = true; startApp(); }
+    }
+    function showLogin() {
+      document.getElementById('authOverlay').style.display = 'flex';
+      document.getElementById('userStatus').style.display = 'none';
+    }
+    // Wait for the whole page (startApp() is defined in the next script).
+    window.addEventListener('DOMContentLoaded', async () => {
+      const { data: { session } } = await db.auth.getSession();
+      if (session) onSignIn(session.user); else showLogin();
+      db.auth.onAuthStateChange((event, session) => {
+        if (event === 'TOKEN_REFRESHED' || event === 'INITIAL_SESSION') return;
+        if (session) onSignIn(session.user); else showLogin();
+      });
+    });
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      const email = document.getElementById('loginEmail').value.trim();
+      const password = document.getElementById('loginPassword').value;
+      const { error } = await db.auth.signInWithPassword({ email, password });
+      document.getElementById('loginError').textContent = error ? error.message : '';
+    });
+    document.getElementById('loginPassword').addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginBtn').click(); });
+    document.getElementById('logoutBtn').addEventListener('click', () => db.auth.signOut());
+  </script>
+  <script>
+    // ---- Small helpers the copied dashboard code expects ----
+    const appState = { repairs: [] };
+    function escapeAttr(v) {
+      return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    }
+    function shortDate(v) { return v ? String(v).slice(0, 10) : ''; }
+    async function readJsonResponse(response, fallback) {
+      const text = await response.text();
+      let result = {};
+      if (text) { try { result = JSON.parse(text); } catch (err) { result = { error: text.slice(0, 500) }; } }
+      if (!response.ok) throw new Error(result.error || `${fallback} (${response.status} ${response.statusText})`);
+      return result;
+    }
+
+    // ---- Job Card (copied from the RTMA dashboard, scripts/build-page.mjs) ----
+    const jcState = { photos: [], sigDataUrl: null, mode: 'repair' };
+
+    function jcVal(id) { const el = document.getElementById(id); return el ? el.value.trim() : ''; }
+    function jcSet(id, val) { const el = document.getElementById(id); if (el) el.value = val || ''; }
+    function jcEsc(s) { return String(s || '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+
+    function jcAddEditRow(tableId, numCols, values) {
+      const tbody = document.querySelector('#' + tableId + ' tbody');
+      if (!tbody) return;
+      const tr = document.createElement('tr');
+      for (let i = 0; i < numCols; i++) {
+        const td = document.createElement('td');
+        const inp = document.createElement('input');
+        inp.type = 'text';
+        inp.value = (values && values[i]) || '';
+        inp.addEventListener('input', jcRenderPreview);
+        td.appendChild(inp);
+        tr.appendChild(td);
+      }
+      const tdBtn = document.createElement('td');
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.className = 'jc-rm-row'; btn.textContent = '×';
+      btn.addEventListener('click', () => { tr.remove(); jcRenderPreview(); });
+      tdBtn.appendChild(btn); tr.appendChild(tdBtn);
+      tbody.appendChild(tr);
+      jcRenderPreview();
+    }
+
+    function jcTableRows(tableId) {
+      return [...document.querySelectorAll('#' + tableId + ' tbody tr')]
+        .map(tr => [...tr.querySelectorAll('input')].map(i => i.value.trim()))
+        .filter(row => row.some(v => v));
+    }
+
+    function jcRenderPreview() {
+      const jcPrintBtnEl = document.getElementById('jcPrintBtn');
+      if (jcPrintBtnEl) jcPrintBtnEl.classList.remove('jc-print-btn--used');
+      if (jcState.mode === 'logistics') { jcRenderServiceNote(); return; }
+
+      const esc = jcEsc;
+      const dash = v => esc(v) || '—';
+      const tableHtml = (rows, cols) => rows.length
+        ? rows.map(r => '<tr>' + r.map(v => '<td>' + esc(v) + '</td>').join('') + '</tr>').join('')
+        : '<tr class="jcp-empty-row"><td colspan="' + cols + '" style="color:#999;font-style:italic">—</td></tr>';
+
+      const photosHtml = jcState.photos.length
+        ? jcState.photos.map(p => '<img class="jcp-photo" src="' + p.dataUrl + '">').join('')
+        : '<div class="jcp-photo-empty">No photos uploaded</div>';
+
+      const sigHtml = jcState.sigDataUrl
+        ? '<img class="jcp-sig-img" src="' + jcState.sigDataUrl + '">'
+        : '<div class="jcp-sig-blank"></div>';
+
+      const genDate = new Date().toLocaleDateString('en-ZA', {year:'numeric',month:'long',day:'numeric'});
+      const signote = jcVal('jc_signote');
+
+      document.getElementById('jcPage').innerHTML =
+        '<div class="jcp-head">' +
+          '<div class="jcp-org">RTMA Group</div>' +
+          '<div class="jcp-title">JOB CARD</div>' +
+          '<div class="jcp-sub">Manually reconstructed &middot; original job card not received</div>' +
+        '</div>' +
+        '<div class="jcp-banner-row">' +
+          '<span><b>Service No:</b> ' + dash(jcVal('jc_caseno')) + '</span>' +
+          '<span><b>Type:</b> ' + dash(jcVal('jc_servicetype')) + '</span>' +
+          '<span><b>Date:</b> ' + dash(jcVal('jc_servicedate')) + '</span>' +
+          '<span><b>Technician:</b> ' + dash(jcVal('jc_tech')) + '</span>' +
+        '</div>' +
+        '<div class="jcp-section-bar">Location Information</div>' +
+        '<div class="jcp-kv-grid">' +
+          '<div class="jcp-kv"><b>Point of Sale</b>' + dash(jcVal('jc_pos')) + '</div>' +
+          '<div class="jcp-kv"><b>Local Code</b>' + dash(jcVal('jc_localcode')) + '</div>' +
+          '<div class="jcp-kv"><b>Warehouse / Workshop</b>' + dash(jcVal('jc_warehouse')) + '</div>' +
+          '<div class="jcp-kv"><b>Address</b>' + dash(jcVal('jc_address')) + '</div>' +
+        '</div>' +
+        '<div class="jcp-section-bar">Service Dates</div>' +
+        '<div class="jcp-kv-grid">' +
+          '<div class="jcp-kv"><b>Begin Date</b>' + dash(jcVal('jc_begin')) + '</div>' +
+          '<div class="jcp-kv"><b>End Date</b>' + dash(jcVal('jc_end')) + '</div>' +
+        '</div>' +
+        '<div class="jcp-section-bar">Asset Information</div>' +
+        '<div class="jcp-kv-grid">' +
+          '<div class="jcp-kv"><b>Barcode</b>' + dash(jcVal('jc_barcode')) + '</div>' +
+          '<div class="jcp-kv"><b>Asset Name</b>' + dash(jcVal('jc_assetname')) + '</div>' +
+          '<div class="jcp-kv"><b>Asset Type / Model</b>' + dash(jcVal('jc_assettype')) + '</div>' +
+          '<div class="jcp-kv"><b>Condition</b>' + dash(jcVal('jc_condition')) + '</div>' +
+        '</div>' +
+        '<div class="jcp-section-bar">Asset Repair History (Last 6 Months)</div>' +
+        '<table class="jcp-table"><thead><tr><th style="width:120px">Date</th><th style="width:350px">Repair / Event</th><th style="width:142px">Outcome</th></tr></thead>' +
+        '<tbody>' + tableHtml(jcTableRows('jcTblHistory'), 3) + '</tbody></table>' +
+        '<div class="jcp-section-bar">Repairs Performed (This Case)</div>' +
+        '<table class="jcp-table"><thead><tr><th style="width:180px">Repair Code</th><th>Repair Name</th></tr></thead>' +
+        '<tbody>' + tableHtml(jcTableRows('jcTblRepairs'), 2) + '</tbody></table>' +
+        '<div class="jcp-section-bar">Symptoms</div>' +
+        '<table class="jcp-table"><thead><tr><th style="width:240px">Symptom</th><th>Notes</th></tr></thead>' +
+        '<tbody>' + tableHtml(jcTableRows('jcTblSymptoms'), 2) + '</tbody></table>' +
+        // Faults Found hidden for now (still being developed), as on the bulk job cards.
+        (jcState.photos.length ? '<div class="jcp-section-bar">Asset Photos</div><div class="jcp-photo-grid">' + photosHtml + '</div>' : '') +
+        '<div class="jcp-section-bar">Signature</div>' +
+        '<div class="jcp-sig-block">' + sigHtml +
+          '<div class="jcp-sig-caption">' + esc(signote || (jcState.sigDataUrl ? '' : 'Signature not captured')) + '</div>' +
+        '</div>' +
+        '<div class="jcp-sig-line-row">' +
+          '<div class="jcp-sig-line"><div class="jcp-sig-line-box"></div><div class="jcp-sig-label">Customer / Authorised Signatory</div></div>' +
+          '<div class="jcp-sig-line"><div class="jcp-sig-line-box"></div><div class="jcp-sig-label">RTMA Technician</div></div>' +
+        '</div>' +
+        '<div class="jcp-footer">Generated via RTMA Job Cards &middot; Manual Job Card Tool &middot; ' + esc(genDate) + '</div>';
+    }
+
+    function jcRenderServiceNote() {
+      const esc = jcEsc;
+      const dash = v => esc(v) || '—';
+      const genDate = new Date().toLocaleDateString('en-ZA', {year:'numeric',month:'long',day:'numeric'});
+      const signote = jcVal('jc_signote');
+      const caseTypeUp = jcVal('jc_servicetype').toUpperCase();
+
+      const kvRow = (lbl, val) => '<div class="jcn-kv-row"><span class="jcn-lbl">' + esc(lbl) + ':</span><span class="jcn-val">' + dash(val) + '</span></div>';
+
+      const delBarcode = jcVal('jc_del_barcode');
+      const remBarcode = jcVal('jc_rem_barcode');
+      const showDel = !!delBarcode || caseTypeUp.includes('DELIVER') || caseTypeUp.includes('REPLACEMENT') || caseTypeUp.includes('PREPARE');
+      const showRem = !!remBarcode || caseTypeUp.includes('REMOVAL') || caseTypeUp.includes('REPLACEMENT') || caseTypeUp.includes('RECEIVE');
+
+      const assetBox = (title, barcode, brand, model, condition) =>
+        '<div class="jcn-asset-box">' +
+          '<div class="jcn-asset-title">' + esc(title) + '</div>' +
+          '<div class="jcn-asset-grid">' +
+            kvRow('Barcode', barcode) +
+            kvRow('Brand', brand) +
+            kvRow('Model', model) +
+            kvRow('Condition', condition) +
+          '</div>' +
+        '</div>';
+
+      const photosHtml = jcState.photos.length
+        ? '<div class="jcn-sig-big" style="margin-top:12px">Asset Photo(s):</div>' +
+          '<div class="jcp-photo-grid">' + jcState.photos.map(p => '<img class="jcp-photo" src="' + p.dataUrl + '">').join('') + '</div>'
+        : '';
+
+      const sigImgHtml = jcState.sigDataUrl
+        ? '<img class="jcn-sig-img" src="' + jcState.sigDataUrl + '">'
+        : '<div class="jcn-sig-blank-big"></div>';
+
+      const pageHead = '<div class="jcn-head"><div class="jcp-org">RTMA Group</div><div class="jcn-title">Service Note</div></div>';
+
+      document.getElementById('jcPage').innerHTML =
+        pageHead +
+        '<div class="jcn-meta-row">' +
+          '<span class="jcn-lbl">Service Nº:</span><span class="jcn-val">' + dash(jcVal('jc_caseno')) + '</span>' +
+          '<span class="jcn-lbl">Service Type:</span><span class="jcn-val">' + dash(jcVal('jc_servicetype')) + '</span>' +
+        '</div>' +
+        '<div class="jcn-section-title">Location Information:</div>' +
+        kvRow('Point of Sales', jcVal('jc_pos')) +
+        kvRow('Local Code', jcVal('jc_localcode')) +
+        kvRow('Address', jcVal('jc_address')) +
+        '<div class="jcn-section-title">Service Dates:</div>' +
+        '<div class="jcn-meta-row">' +
+          '<span class="jcn-lbl">Begin Date:</span><span class="jcn-val">' + dash(jcVal('jc_begin')) + '</span>' +
+          '<span class="jcn-lbl">End Date:</span><span class="jcn-val">' + dash(jcVal('jc_end')) + '</span>' +
+        '</div>' +
+        '<div class="jcn-meta-row">' +
+          '<span class="jcn-lbl">Service Date:</span><span class="jcn-val">' + dash(jcVal('jc_servicedate')) + '</span>' +
+          '<span class="jcn-lbl">Driver:</span><span class="jcn-val">' + dash(jcVal('jc_tech')) + '</span>' +
+        '</div>' +
+        (showDel ? assetBox('Asset Delivered Information:', jcVal('jc_del_barcode'), jcVal('jc_del_brand'), jcVal('jc_del_model'), jcVal('jc_del_condition')) : '') +
+        (showRem ? assetBox('Asset Removed Information:', jcVal('jc_rem_barcode'), jcVal('jc_rem_brand'), jcVal('jc_rem_model'), jcVal('jc_rem_condition')) : '') +
+        photosHtml +
+        '<div class="jcn-sig-page">' +
+          pageHead +
+          '<div class="jcn-sig-big">Signature:</div>' +
+          sigImgHtml +
+          (signote ? '<div class="jcp-sig-caption" style="margin-top:6px">' + esc(signote) + '</div>' : '') +
+        '</div>' +
+        '<div class="jcn-footer">Generated via RTMA Job Cards &middot; Service Note Tool &middot; ' + esc(genDate) + '</div>';
+    }
+
+    function jcSetMode(mode) {
+      jcState.mode = mode;
+      document.querySelectorAll('.jc-mode-toggle button').forEach(btn =>
+        btn.classList.toggle('active', btn.dataset.jcModeBtn === mode));
+      document.querySelectorAll('[data-jc-mode]').forEach(el =>
+        el.style.display = el.dataset.jcMode === mode ? '' : 'none');
+      const techLabel = document.getElementById('jcTechLabel');
+      if (techLabel) techLabel.textContent = mode === 'logistics' ? 'Driver' : 'Technician';
+      jcRenderPreview();
+    }
+
+    async function jcSearchCase() {
+      const query = document.getElementById('jcSearchInput').value.trim();
+      const statusEl = document.getElementById('jcSearchStatus');
+      if (!query) { statusEl.textContent = 'Enter a case number to search.'; return; }
+      statusEl.textContent = 'Searching…';
+      let found;
+      try {
+        const response = await fetch('/api/jobcard-cases?caseNumber=' + encodeURIComponent(query), { cache: 'no-store' });
+        const data = await readJsonResponse(response, 'Case lookup unavailable');
+        found = (data.cases || [])[0];
+      } catch (err) {
+        statusEl.innerHTML = '<span style="color:var(--red)">Case lookup failed: ' + jcEsc(err.message || String(err)) + '</span>';
+        return;
+      }
+      if (!found) {
+        statusEl.innerHTML = '<span style="color:var(--red)">Case "' + jcEsc(query) + '" not found.</span>';
+        return;
+      }
+      // Auto-detect mode based on case type
+      const caseTypeUp = String(found['Case Type'] || '').toUpperCase();
+      const LOGISTICS_TYPES = ['REPLACEMENT OF ASSET','DELIVER AN ASSET','REMOVAL OF ASSET','PREPARE ASSET','RECEIVE ASSET','DECAL@WH','DECAL @WH','DECAL'];
+      const isLogistics = LOGISTICS_TYPES.some(t => caseTypeUp.includes(t.toUpperCase()));
+      jcSetMode(isLogistics ? 'logistics' : 'repair');
+
+      statusEl.textContent = 'Case found. Loading records…';
+
+      // Common fields
+      jcSet('jc_caseno', found['Case Number']);
+      jcSet('jc_servicetype', found['Case Type']);
+      jcSet('jc_pos', found['Point of Sale']);
+      jcSet('jc_localcode', found['POS Local Code']);
+      jcSet('jc_warehouse', found['Warehouse / Workshop']);
+      jcSet('jc_address', found['Address']);
+      jcSet('jc_begin', found['Begin Date'] || '');
+      jcSet('jc_end', found['End Date'] || '');
+      const closureRaw = found['Service Closure Date'] || found['End Date'] || '';
+      if (closureRaw) {
+        const d = new Date(closureRaw);
+        if (!isNaN(d)) jcSet('jc_servicedate', d.toLocaleDateString('en-ZA', {weekday:'long',year:'numeric',month:'long',day:'numeric'}));
+      }
+      jcSet('jc_tech', found['Technician Routed To']);
+
+      const caseNo = String(found['Case Number'] || '').trim().toUpperCase();
+
+      if (isLogistics) {
+        // Fill logistics asset fields
+        jcSet('jc_del_barcode', found['Asset Delivered Barcode'] || '');
+        jcSet('jc_del_brand', '');
+        jcSet('jc_del_model', found['Asset Type'] || '');
+        jcSet('jc_del_condition', found['Asset Condition'] || '');
+        jcSet('jc_rem_barcode', found['Asset Removed Barcode'] || '');
+        jcSet('jc_rem_brand', '');
+        jcSet('jc_rem_model', '');
+        jcSet('jc_rem_condition', '');
+        jcRenderPreview();
+        statusEl.innerHTML = '<span style="color:var(--green)">Case loaded. Edit any field then Print.</span>';
+      } else {
+        // Repair mode — fill asset + load repair records and history
+        jcSet('jc_barcode', found['Asset Barcode'] || found['Asset Repaired Barcode'] || found['Asset Delivered Barcode'] || '');
+        jcSet('jc_assetname', found['Mapped Asset'] || found['Asset Repaired'] || found['Asset Delivered'] || found['Asset Removed'] || '');
+        jcSet('jc_assettype', found['Asset Type']);
+        jcSet('jc_condition', found['Asset Condition']);
+
+        let caseRepairs = [];
+        try { caseRepairs = (await fetchCaseRepairLines([found['Case Number']])).get(caseNo) || []; }
+        catch (err) { statusEl.innerHTML = '<span style="color:var(--amber)">Repair lines could not be loaded: ' + jcEsc(err.message || String(err)) + '</span>'; }
+        document.querySelector('#jcTblRepairs tbody').innerHTML = '';
+        if (caseRepairs.length) {
+          caseRepairs.forEach(r => jcAddEditRow('jcTblRepairs', 2, [r.repair_code || '', r.repair_name || '']));
+          const rn = document.getElementById('jcRepairsNote');
+          rn.textContent = caseRepairs.length + ' repair record(s) found for this case.';
+          rn.style.display = 'block';
+        } else {
+          jcAddEditRow('jcTblRepairs', 2);
+          document.getElementById('jcRepairsNote').style.display = 'none';
+        }
+
+        const assetId = found['Asset Barcode'] || found['Asset Repaired Barcode'] || found['Mapped Asset'] || found['Asset Repaired'] || '';
+        if (assetId) {
+          statusEl.textContent = 'Loading asset repair history for ' + assetId + '…';
+          await jcLoadAssetHistory(assetId, caseNo);
+        } else {
+          statusEl.innerHTML = '<span style="color:var(--amber)">Case loaded — no asset identifier to look up repair history.</span>';
+        }
+        jcRenderPreview();
+        if (assetId) statusEl.innerHTML = '<span style="color:var(--green)">Case and asset history loaded. Edit any field then Print.</span>';
+      }
+    }
+
+    // Repair lines (case_repairs) for specific cases, keyed by upper-case case
+    // number. Fetched per case on purpose: appState.repairs is the Repairs
+    // tab's list, which the API caps at the newest 1,000 lines, so older
+    // cases' repairs are missing from it.
+    async function fetchCaseRepairLines(caseNumbers) {
+      const unique = [...new Set((caseNumbers || []).map(c => String(c || '').trim()).filter(Boolean))];
+      const byCase = new Map();
+      for (let i = 0; i < unique.length; i += 100) {
+        const chunk = unique.slice(i, i + 100);
+        const response = await fetch('/api/jobcard-repairs?caseNumbers=' + chunk.map(encodeURIComponent).join(','), { cache: 'no-store' });
+        const data = await readJsonResponse(response, 'Repair lines unavailable');
+        (data.rows || []).forEach(r => {
+          const key = String(r.case_number || '').trim().toUpperCase();
+          if (!byCase.has(key)) byCase.set(key, []);
+          byCase.get(key).push(r);
+        });
+      }
+      return byCase;
+    }
+
+    async function jcLoadAssetHistory(assetId, currentCaseNo) {
+      const histNote = document.getElementById('jcHistoryNote');
+      document.querySelector('#jcTblHistory tbody').innerHTML = '';
+      try {
+        const from = new Date(); from.setMonth(from.getMonth() - 6);
+        const url = '/api/jobcard-asset-history?asset_no=' + encodeURIComponent(assetId) +
+                    '&from_date=' + from.toISOString().slice(0,10) +
+                    '&to_date=' + new Date().toISOString().slice(0,10);
+        const resp = await fetch(url, { cache: 'no-store' });
+        if (!resp.ok) throw new Error('HTTP ' + resp.status);
+        const data = await resp.json();
+        if (data.bar_code) jcSet('jc_barcode', data.bar_code);
+        // Same rule as the bulk job cards (bulkJobCardExtras): the asset's earlier
+        // REPAIR cases only (no logistics, no individual repair lines), one row
+        // per case, current case excluded.
+        const currentUp = String(currentCaseNo || '').trim().toUpperCase();
+        const seenCases = new Set();
+        const timeline = (data.timeline || [])
+          .filter(ev => ev.event_group === 'repair' && ev.source !== 'repair' && ev.case_number
+            && String(ev.case_number).trim().toUpperCase() !== currentUp)
+          .filter(ev => !seenCases.has(ev.case_number) && seenCases.add(ev.case_number));
+        if (timeline.length) {
+          timeline.slice(0, 20).forEach(ev => {
+            jcAddEditRow('jcTblHistory', 3, [ev.event_date ? String(ev.event_date).slice(0,10) : '', `${ev.event_type || ''} (${ev.case_number})`, ev.outcome_group || ev.status_reason || '']);
+          });
+          histNote.textContent = timeline.length + ' earlier repair case(s) found for this asset (showing up to 20, current case excluded).';
+        } else {
+          jcAddEditRow('jcTblHistory', 3);
+          histNote.textContent = 'No earlier repair cases for asset "' + assetId + '" in the last 6 months.';
+        }
+      } catch (_) {
+        // Fallback: filter repairs by asset number
+        const assetUp = assetId.toUpperCase();
+        const assetRepairs = (appState.repairs || [])
+          .filter(r => String(r.asset_number || '').toUpperCase().includes(assetUp) && String(r.case_number || '').trim().toUpperCase() !== String(currentCaseNo || '').toUpperCase())
+          .slice(0, 20);
+        if (assetRepairs.length) {
+          assetRepairs.forEach(r => jcAddEditRow('jcTblHistory', 3, [String(r.created_on || '').slice(0,10), [r.repair_code, r.repair_name].filter(Boolean).join(' – '), r.case_status_reason || '']));
+          histNote.textContent = assetRepairs.length + ' prior repair record(s) found via repair data.';
+        } else {
+          jcAddEditRow('jcTblHistory', 3);
+          histNote.textContent = 'No prior history found. Add manually if needed.';
+        }
+      }
+      histNote.style.display = 'block';
+    }
+
+    function jcInitSignaturePad() {
+      const pad = document.getElementById('jcSigPad');
+      const ctx = pad.getContext('2d');
+      ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.strokeStyle = '#1c1c1c';
+      let drawing = false, lx = 0, ly = 0;
+      function pos(e) {
+        const r = pad.getBoundingClientRect();
+        const cx = (e.touches ? e.touches[0].clientX : e.clientX) - r.left;
+        const cy = (e.touches ? e.touches[0].clientY : e.clientY) - r.top;
+        return { x: cx * pad.width / r.width, y: cy * pad.height / r.height };
+      }
+      pad.addEventListener('mousedown', e => { drawing = true; const p = pos(e); lx = p.x; ly = p.y; e.preventDefault(); });
+      pad.addEventListener('mousemove', e => { if (!drawing) return; const p = pos(e); ctx.beginPath(); ctx.moveTo(lx,ly); ctx.lineTo(p.x,p.y); ctx.stroke(); lx=p.x; ly=p.y; e.preventDefault(); });
+      window.addEventListener('mouseup', () => drawing = false);
+      pad.addEventListener('touchstart', e => { drawing = true; const p = pos(e); lx = p.x; ly = p.y; e.preventDefault(); }, { passive: false });
+      pad.addEventListener('touchmove', e => { if (!drawing) return; const p = pos(e); ctx.beginPath(); ctx.moveTo(lx,ly); ctx.lineTo(p.x,p.y); ctx.stroke(); lx=p.x; ly=p.y; e.preventDefault(); }, { passive: false });
+      pad.addEventListener('touchend', () => drawing = false);
+      document.getElementById('jcSigClear').addEventListener('click', () => ctx.clearRect(0, 0, pad.width, pad.height));
+      document.getElementById('jcSigUse').addEventListener('click', () => {
+        jcState.sigDataUrl = pad.toDataURL('image/png');
+        jcSetSigPill('Drawn signature');
+        jcRenderPreview();
+      });
+    }
+
+    function jcSetSigPill(label) {
+      const pill = document.getElementById('jcSigPill');
+      pill.innerHTML = '';
+      const span = document.createElement('span');
+      span.className = 'jc-file-pill';
+      span.textContent = label + ' ';
+      const btn = document.createElement('button');
+      btn.type = 'button'; btn.textContent = '×';
+      btn.addEventListener('click', () => { jcState.sigDataUrl = null; pill.innerHTML = ''; jcRenderPreview(); });
+      span.appendChild(btn);
+      pill.appendChild(span);
+    }
+
+    function initJobCard() {
+      // Editable table "add row" buttons
+      document.querySelectorAll('.jc-add-row-btn').forEach(btn => {
+        btn.addEventListener('click', () => jcAddEditRow(btn.dataset.jcTable, parseInt(btn.dataset.jcCols, 10)));
+      });
+      // Seed one empty row per table
+      [['jcTblHistory', 3], ['jcTblRepairs', 2], ['jcTblSymptoms', 2], ['jcTblFaults', 2]]
+        .forEach(([id, cols]) => jcAddEditRow(id, cols));
+
+      // Photo upload
+      const photoDrop = document.getElementById('jcPhotoDrop');
+      const photoInput = document.getElementById('jcPhotoInput');
+      photoDrop.addEventListener('click', e => { if (e.target.tagName !== 'INPUT') photoInput.click(); });
+      photoDrop.addEventListener('dragover', e => e.preventDefault());
+      photoDrop.addEventListener('drop', e => { e.preventDefault(); if (e.dataTransfer.files.length) jcHandlePhotos(e.dataTransfer.files); });
+      photoInput.addEventListener('change', e => jcHandlePhotos(e.target.files));
+
+      // Signature upload
+      const sigDrop = document.getElementById('jcSigDrop');
+      const sigInput = document.getElementById('jcSigInput');
+      sigDrop.addEventListener('click', e => { if (e.target.tagName !== 'INPUT') sigInput.click(); });
+      sigInput.addEventListener('change', e => {
+        const f = e.target.files[0]; if (!f) return;
+        const reader = new FileReader();
+        reader.onload = ev => { jcState.sigDataUrl = ev.target.result; jcSetSigPill(f.name); jcRenderPreview(); };
+        reader.readAsDataURL(f);
+      });
+
+      // Signature pad
+      jcInitSignaturePad();
+
+      // Mode toggle
+      document.querySelectorAll('.jc-mode-toggle button').forEach(btn =>
+        btn.addEventListener('click', () => jcSetMode(btn.dataset.jcModeBtn)));
+
+      // Search
+      document.getElementById('jcSearchBtn').addEventListener('click', jcSearchCase);
+      document.getElementById('jcSearchInput').addEventListener('keydown', e => { if (e.key === 'Enter') jcSearchCase(); });
+
+      // Live preview on all text inputs
+      ['jc_caseno','jc_servicetype','jc_pos','jc_localcode','jc_warehouse','jc_address',
+       'jc_begin','jc_end','jc_servicedate','jc_tech','jc_barcode','jc_assetname',
+       'jc_assettype','jc_condition','jc_signote',
+       'jc_del_barcode','jc_del_brand','jc_del_model','jc_del_condition',
+       'jc_rem_barcode','jc_rem_brand','jc_rem_model','jc_rem_condition'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('input', jcRenderPreview);
+      });
+
+      // Print — use afterprint so the class stays on during the entire print render
+      document.getElementById('jcPrintBtn').addEventListener('click', () => {
+        document.getElementById('jcPrintBtn').classList.add('jc-print-btn--used');
+        document.body.classList.add('print-jobcard');
+        const styleTag = document.createElement('style');
+        styleTag.id = 'jc-print-portrait';
+        styleTag.textContent = '@page { size: A4 portrait; margin: 12mm; }';
+        document.head.appendChild(styleTag);
+        const cleanup = () => {
+          document.body.classList.remove('print-jobcard');
+          const s = document.getElementById('jc-print-portrait');
+          if (s) s.remove();
+        };
+        window.addEventListener('afterprint', cleanup, { once: true });
+        window.print();
+      });
+
+      jcRenderPreview();
+    }
+
+    function jcHandlePhotos(files) {
+      [...files].forEach(f => {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          jcState.photos.push({ name: f.name, dataUrl: ev.target.result });
+          jcRenderPhotoPills();
+          jcRenderPreview();
+        };
+        reader.readAsDataURL(f);
+      });
+    }
+
+    function jcRenderPhotoPills() {
+      const wrap = document.getElementById('jcPhotoPills');
+      wrap.innerHTML = '';
+      jcState.photos.forEach((p, idx) => {
+        const span = document.createElement('span');
+        span.className = 'jc-file-pill';
+        const label = p.name.length > 24 ? p.name.slice(0,21) + '…' : p.name;
+        span.textContent = label + ' ';
+        const btn = document.createElement('button');
+        btn.type = 'button'; btn.textContent = '×';
+        btn.addEventListener('click', () => { jcState.photos.splice(idx, 1); jcRenderPhotoPills(); jcRenderPreview(); });
+        span.appendChild(btn);
+        wrap.appendChild(span);
+      });
+    }
+
+    // ---- Bulk Job Cards (copied from the RTMA dashboard, scripts/build-page.mjs) ----
+    function displayServiceDate(row) {
+      const raw = row['Service Closure Date'] || row['End Date'] || '';
+      const d = raw ? new Date(raw) : null;
+      return d && !isNaN(d) ? d.toLocaleDateString('en-ZA', { weekday:'long', year:'numeric', month:'long', day:'numeric' }) : shortDate(raw);
+    }
+    function bulkDocField(label, value) {
+      return `<div class="jcp-kv"><b>${escapeAttr(label)}</b>${escapeAttr(value || '—')}</div>`;
+    }
+    function bulkJobTableHtml(headers, rows, blankRows) {
+      const head = headers.map(([label, width]) => `<th${width ? ` style="width:${width}"` : ''}>${escapeAttr(label)}</th>`).join('');
+      const body = rows.length
+        ? rows.map(r => '<tr>' + r.map(v => `<td>${escapeAttr(v || '')}</td>`).join('') + '</tr>').join('')
+        : Array.from({ length: blankRows }, () => '<tr class="jcp-blank-row">' + headers.map(() => '<td>&nbsp;</td>').join('') + '</tr>').join('');
+      return `<table class="jcp-table"><thead><tr>${head}</tr></thead><tbody>${body}</tbody></table>`;
+    }
+    // Same sections as the Job Card tab's repair mode. Symptoms and Faults
+    // have no data source (manual on the Job Card tab too), so they print as
+    // blank lines for the technician to fill in.
+    // Faults Found is hidden on bulk job cards for now - still being developed.
+    function bulkJobRepairSectionsHtml(extra) {
+      const info = extra || {};
+      return `<div class="jcp-section-bar">Asset Repair History (Last 6 Months)</div>
+        ${info.historyNote ? `<div class="jcp-note">${escapeAttr(info.historyNote)}</div>` : ''}
+        ${bulkJobTableHtml([['Date', '18%'], ['Repair / Event', '57%'], ['Outcome', '25%']], info.history || [], 2)}
+        <div class="jcp-section-bar">Repairs Performed (This Case)</div>
+        ${info.repairsNote ? `<div class="jcp-note">${escapeAttr(info.repairsNote)}</div>` : ''}
+        ${bulkJobTableHtml([['Date', '16%'], ['Repair Code', '22%'], ['Repair Name', '']], info.repairs || [], 3)}
+        <div class="jcp-section-bar">Symptoms</div>
+        ${bulkJobTableHtml([['Symptom', '38%'], ['Notes', '']], [], 3)}`;
+    }
+    function bulkJobAssetId(row) {
+      return row['Asset Barcode'] || row['Asset Repaired Barcode'] || row['Mapped Asset'] || row['Asset Repaired'] || '';
+    }
+    async function bulkJobFetchAssetHistory(assetId) {
+      const from = new Date(); from.setMonth(from.getMonth() - 6);
+      const url = '/api/jobcard-asset-history?asset_no=' + encodeURIComponent(assetId) +
+                  '&from_date=' + from.toISOString().slice(0, 10) +
+                  '&to_date=' + new Date().toISOString().slice(0, 10);
+      const resp = await fetch(url, { cache: 'no-store' });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      return resp.json();
+    }
+    // Loads asset repair history + this case's repairs for each selected case,
+    // the same way jcSearchCase()/jcLoadAssetHistory() do for one job card.
+    async function bulkJobCardExtras(rows, onProgress) {
+      let caseRepairLines = new Map();
+      try { caseRepairLines = await fetchCaseRepairLines(rows.map(r => r['Case Number'])); } catch (_) { caseRepairLines = null; }
+      const assetIds = [...new Set(rows.map(bulkJobAssetId).filter(Boolean))];
+      const histories = new Map();
+      const queue = assetIds.slice();
+      let done = 0;
+      const worker = async () => {
+        while (queue.length) {
+          const assetId = queue.shift();
+          try { histories.set(assetId, await bulkJobFetchAssetHistory(assetId)); }
+          catch (_) { histories.set(assetId, null); }
+          done += 1;
+          if (onProgress) onProgress(done, assetIds.length);
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(6, assetIds.length) }, worker));
+      const extras = new Map();
+      rows.forEach(row => {
+        const caseNo = String(row['Case Number'] || '').trim().toUpperCase();
+        const sameCase = value => String(value || '').trim().toUpperCase() === caseNo;
+        const assetId = bulkJobAssetId(row);
+        const data = assetId ? histories.get(assetId) : null;
+        const timeline = (data && data.timeline) || [];
+        // Repairs Performed = the repair lines on THIS case only. Asset Repair
+        // History = the asset's earlier repair cases, one row per case.
+        const repairs = [];
+        const seen = new Set();
+        const addRepair = (date, code, name) => {
+          const key = `${code || ''}|${name || ''}`;
+          if ((code || name) && !seen.has(key)) { seen.add(key); repairs.push([String(date || '').slice(0, 10), code || '', name || '']); }
+        };
+        ((caseRepairLines && caseRepairLines.get(caseNo)) || [])
+          .forEach(r => addRepair(r.created_on, r.repair_code, r.repair_name));
+        timeline.filter(ev => ev.source === 'repair' && sameCase(ev.case_number))
+          .forEach(ev => addRepair(ev.event_date, ev.repair_code, ev.repair_name));
+        repairs.sort((a, b) => b[0].localeCompare(a[0]));
+        let history = [];
+        let historyNote = '';
+        if (!assetId) {
+          historyNote = 'No asset identifier on this case - repair history not looked up.';
+        } else if (!data) {
+          historyNote = 'Asset history could not be loaded.';
+        } else {
+          const seenCases = new Set();
+          history = timeline
+            .filter(ev => ev.event_group === 'repair' && ev.source !== 'repair' && ev.case_number && !sameCase(ev.case_number))
+            .filter(ev => !seenCases.has(ev.case_number) && seenCases.add(ev.case_number))
+            .slice(0, 20)
+            .map(ev => [ev.event_date ? String(ev.event_date).slice(0, 10) : '',
+              `${ev.event_type || ''} (${ev.case_number})`,
+              ev.outcome_group || ev.status_reason || '']);
+          if (!history.length) historyNote = `No earlier repair cases for asset "${assetId}" in the last 6 months.`;
+        }
+        const repairsNote = repairs.length ? '' : (caseRepairLines ? 'No repair lines uploaded for this case yet.' : 'Repair lines could not be loaded.');
+        extras.set(row, { history, historyNote, repairs, repairsNote });
+      });
+      return extras;
+    }
+    function bulkJobDocumentHtml(row, mode, extra) {
+      const isLogistics = mode === 'logistics';
+      const title = isLogistics ? 'LOGISTICS SERVICE NOTE' : 'JOB CARD';
+      const serviceType = row['Case Type'] || '';
+      const caseNo = row['Case Number'] || '';
+      const technicianLabel = isLogistics ? 'Driver' : 'Technician';
+      const assetName = row['Mapped Asset'] || row['Asset Repaired'] || row['Asset Delivered'] || row['Asset Removed'] || '';
+      const assetBarcode = row['Asset Barcode'] || row['Asset Repaired Barcode'] || row['Asset Delivered Barcode'] || row['Asset Removed Barcode'] || '';
+      return `<section class="jc-page bulk-print-page">
+        <div class="jcp-head">
+          <div class="jcp-org">RTMA Group</div>
+          <div class="jcp-title">${escapeAttr(title)}</div>
+          <div class="jcp-sub">Generated from Case Records</div>
+        </div>
+        <div class="jcp-banner-row">
+          <span><b>Service No:</b> ${escapeAttr(caseNo || '—')}</span>
+          <span><b>Type:</b> ${escapeAttr(serviceType || '—')}</span>
+          <span><b>Date:</b> ${escapeAttr(displayServiceDate(row) || '—')}</span>
+          <span><b>${technicianLabel}:</b> ${escapeAttr(row['Technician Routed To'] || 'Unrouted')}</span>
+        </div>
+        <div class="jcp-section-bar">${isLogistics ? 'Logistics Details' : 'Location Information'}</div>
+        <div class="jcp-kv-grid">
+          ${bulkDocField('Point of Sale', row['Point of Sale'])}
+          ${bulkDocField('Local Code', row['POS Local Code'])}
+          ${bulkDocField('Warehouse / Workshop', row['Warehouse / Workshop'])}
+          ${bulkDocField('Address', row['Address'])}
+        </div>
+        <div class="jcp-section-bar">Service Dates</div>
+        <div class="jcp-kv-grid">
+          ${bulkDocField('Begin Date', row['Begin Date'] || row['Created On'])}
+          ${bulkDocField('End Date', row['End Date'])}
+          ${bulkDocField('Service Closure Date', row['Service Closure Date'])}
+          ${bulkDocField('SLA Status', row['SLA Status'])}
+        </div>
+        <div class="jcp-section-bar">Asset Information</div>
+        <div class="jcp-kv-grid">
+          ${bulkDocField('Barcode', assetBarcode)}
+          ${bulkDocField('Asset Name', assetName)}
+          ${bulkDocField('Asset Type / Model', row['Asset Type'])}
+          ${bulkDocField('Condition', row['Asset Condition'])}
+        </div>
+        ${isLogistics ? '' : bulkJobRepairSectionsHtml(extra)}
+        <div class="jcp-section-bar">Case Notes</div>
+        <table class="jcp-table">
+          <thead><tr><th>Field</th><th>Value</th></tr></thead>
+          <tbody>
+            <tr><td>Case Number</td><td>${escapeAttr(caseNo || '—')}</td></tr>
+            <tr><td>Status Reason</td><td>${escapeAttr(row['Status Reason'] || '—')}</td></tr>
+            <tr><td>Motive</td><td>${escapeAttr(row['Motive'] || '—')}</td></tr>
+            <tr><td>Mapped Asset</td><td>${escapeAttr(row['Mapped Asset'] || '—')}</td></tr>
+          </tbody>
+        </table>
+        <div class="jcp-footer">Generated via RTMA Job Cards &middot; Bulk ${escapeAttr(isLogistics ? 'Logistics Notes' : 'Job Cards')} &middot; ${escapeAttr(new Date().toLocaleDateString('en-ZA'))}</div>
+      </section>`;
+    }
+    async function printBulkCaseDocuments(mode) {
+      const rows = bulkSelectedRows();
+      if (!rows.length) { alert('Select one or more cases first.'); return; }
+      const title = mode === 'logistics' ? 'Bulk Logistics Notes' : 'Bulk Job Cards';
+      // Open the window before any await so the popup blocker allows it.
+      const win = window.open('', '_blank');
+      if (!win) { alert('Please allow popups to generate the bulk document.'); return; }
+      let extras = new Map();
+      if (mode !== 'logistics') {
+        win.document.write(`<!doctype html><html><head><title>${escapeAttr(title)}</title></head><body style="font-family:Segoe UI,Arial,sans-serif;padding:24px;color:#0B2265">Loading repairs and asset repair history for ${rows.length} case(s)...</body></html>`);
+        win.document.close();
+        try {
+          extras = await bulkJobCardExtras(rows, (done, total) => {
+            if (!win.closed && win.document.body) win.document.body.textContent = `Loading asset repair history... ${done} of ${total} asset(s)`;
+          });
+        } catch (_) { extras = new Map(); }
+        if (win.closed) return;
+        win.document.open();
+      }
+      win.document.write(`<!doctype html><html><head><title>${escapeAttr(title)}</title><style>
+        @page{size:A4 portrait;margin:12mm}
+        body{margin:0;background:#fff;color:#17212f;font-family:Segoe UI,Arial,sans-serif}
+        .jc-page{background:#fff;color:#0f172a;margin:0 auto 18px;max-width:760px;padding:24px 28px;page-break-after:always;box-sizing:border-box}
+        .jc-page:last-child{page-break-after:auto}
+        .jcp-head{border-bottom:3px solid #0B2265;margin-bottom:8px;padding-bottom:8px;text-align:center;text-transform:uppercase}
+        .jcp-org{color:#c2410c;font-size:11px;font-weight:900;letter-spacing:2px}
+        .jcp-title{color:#0B2265;font-size:26px;font-weight:900;line-height:1;margin:4px 0 2px}
+        .jcp-sub{color:#637083;font-size:10px;text-transform:none}
+        .jcp-banner-row{background:#0B2265;color:#fff;display:grid;font-size:11px;gap:4px 10px;grid-template-columns:1fr 1fr;margin-bottom:10px;padding:7px 10px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+        .jcp-section-bar{background:#0B2265;color:#fff;font-size:12px;font-weight:800;margin:10px 0 5px;padding:5px 10px;-webkit-print-color-adjust:exact;print-color-adjust:exact;break-after:avoid;page-break-after:avoid}
+        .jcp-kv-grid{display:grid;gap:6px 28px;grid-template-columns:repeat(2,minmax(0,1fr))}
+        .jcp-kv{display:grid;gap:2px;font-size:12px;overflow-wrap:anywhere}
+        .jcp-kv b{color:#334155;font-size:10px;text-transform:uppercase}
+        .jcp-note{color:#637083;font-size:10px;font-style:italic;margin:0 0 4px}
+        .jcp-table{border-collapse:collapse;table-layout:fixed;width:100%}
+        .jcp-table th,.jcp-table td{border-bottom:1px solid #d9dee8;font-size:11px;padding:4px 7px;text-align:left;overflow-wrap:anywhere}
+        .jcp-table th{background:#f1f5f9;text-transform:uppercase;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+        .jcp-table tr{break-inside:avoid;page-break-inside:avoid}
+        .jcp-blank-row td{height:20px}
+        .jcp-footer{color:#637083;font-size:10px;margin-top:14px;text-align:center}
+        @media print{.jc-page{margin:0;max-width:none;width:100%;padding:0}}
+      </style></head><body>${rows.map(row => bulkJobDocumentHtml(row, mode, extras.get(row))).join('')}</body></html>`);
+      win.document.close();
+      win.focus();
+      win.print();
+    }
+
+    // ---- Bulk tab: paste case numbers -> pick -> print ----
+    const bulkState = { rows: [] };
+    function bulkSelectedRows() {
+      const ticked = new Set([...document.querySelectorAll('#bulkRows input[type=checkbox]:checked')].map(cb => Number(cb.dataset.idx)));
+      return bulkState.rows.filter((_, i) => ticked.has(i));
+    }
+    function bulkUpdateCount() {
+      const n = bulkSelectedRows().length;
+      document.getElementById('bulkCount').textContent = `${n} of ${bulkState.rows.length} selected`;
+      document.getElementById('bulkPrintJobBtn').disabled = !n;
+      document.getElementById('bulkPrintLogBtn').disabled = !n;
+    }
+    function parseCaseList(text) {
+      return [...new Set(String(text || '').split(/[\s,;]+/).map(s => s.trim()).filter(Boolean))];
+    }
+    async function bulkLoad() {
+      const list = parseCaseList(document.getElementById('bulkInput').value);
+      const status = document.getElementById('bulkStatus');
+      if (!list.length) { status.textContent = 'Paste at least one case number.'; return; }
+      if (list.length > 200) { status.textContent = `${list.length} case numbers - load at most 200 at a time.`; return; }
+      status.textContent = `Loading ${list.length} case(s)...`;
+      document.getElementById('bulkLoadBtn').disabled = true;
+      try {
+        const response = await fetch('/api/jobcard-cases?caseNumbers=' + list.map(encodeURIComponent).join(','), { cache: 'no-store' });
+        const data = await readJsonResponse(response, 'Case lookup unavailable');
+        bulkState.rows = data.cases || [];
+        document.getElementById('bulkRows').innerHTML = bulkState.rows.map((r, i) => `<tr>
+          <td><input type="checkbox" data-idx="${i}" checked></td>
+          <td>${escapeAttr(r['Case Number'])}</td><td>${escapeAttr(r['Case Type'])}</td>
+          <td>${escapeAttr(r['Point of Sale'])}</td><td>${escapeAttr(r['Warehouse / Workshop'])}</td>
+          <td>${escapeAttr(r['Status Reason'])}</td><td>${escapeAttr(r['Technician Routed To'] || 'Unrouted')}</td></tr>`).join('');
+        const missing = data.missing || [];
+        document.getElementById('bulkMissing').textContent = missing.length ? `Not found (${missing.length}): ${missing.join(', ')}` : '';
+        document.getElementById('bulkAll').checked = true;
+        document.getElementById('bulkResults').hidden = false;
+        status.textContent = `${bulkState.rows.length} case(s) loaded.`;
+        bulkUpdateCount();
+      } catch (err) {
+        status.textContent = 'Could not load cases: ' + (err.message || err);
+      } finally {
+        document.getElementById('bulkLoadBtn').disabled = false;
+      }
+    }
+
+    function showAppTab(id) {
+      document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === id));
+      document.querySelectorAll('[data-app-tab]').forEach(b => b.classList.toggle('active', b.dataset.appTab === id));
+    }
+
+    // Runs once, after sign-in. Links from the dashboard can pre-fill:
+    //   ?case=CAS-1                      -> Job Card tab, case searched
+    //   ?cases=CAS-1,CAS-2               -> Bulk tab, cases loaded
+    function startApp() {
+      document.querySelectorAll('[data-app-tab]').forEach(b => b.addEventListener('click', () => showAppTab(b.dataset.appTab)));
+      document.getElementById('jobCardTab').classList.add('active');
+      initJobCard();
+      document.getElementById('bulkLoadBtn').addEventListener('click', bulkLoad);
+      document.getElementById('bulkClearBtn').addEventListener('click', () => {
+        document.getElementById('bulkInput').value = '';
+        document.getElementById('bulkResults').hidden = true;
+        document.getElementById('bulkStatus').textContent = '';
+        bulkState.rows = [];
+      });
+      document.getElementById('bulkAll').addEventListener('change', e => {
+        document.querySelectorAll('#bulkRows input[type=checkbox]').forEach(cb => { cb.checked = e.target.checked; });
+        bulkUpdateCount();
+      });
+      document.getElementById('bulkRows').addEventListener('change', bulkUpdateCount);
+      document.getElementById('bulkPrintJobBtn').addEventListener('click', () => printBulkCaseDocuments('jobcard'));
+      document.getElementById('bulkPrintLogBtn').addEventListener('click', () => printBulkCaseDocuments('logistics'));
+
+      const params = new URLSearchParams(location.search);
+      if (params.get('cases')) {
+        showAppTab('bulkTab');
+        document.getElementById('bulkInput').value = parseCaseList(params.get('cases')).join('\n');
+        bulkLoad();
+      } else if (params.get('case')) {
+        document.getElementById('jcSearchInput').value = params.get('case');
+        jcSearchCase();
+      }
+    }
+  </script>
+</body>
+</html>
