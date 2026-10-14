@@ -97,8 +97,9 @@
     .jcp-org { font-size: 10px; letter-spacing: .14em; color: #c1511f; text-transform: uppercase; font-weight: 800; margin-bottom: 2px; }
     .jcp-title { font-size: 21px; font-weight: 900; color: #0B2265; margin: 0; }
     .jcp-sub { font-size: 9.5px; color: #888; margin-top: 2px; }
-    .jcp-banner-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 4px; background: #0B2265; color: #fff; padding: 5px 9px; margin: 10px 0 4px; font-size: 10.5px; border-radius: 3px; }
-    .jcp-banner-row span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    /* Two columns (Service No | Type, Date | Technician) so the full case number shows - same as the bulk cards. */
+    .jcp-banner-row { display: grid; grid-template-columns: 1fr 1fr; gap: 3px 14px; background: #0B2265; color: #fff; padding: 6px 10px; margin: 10px 0 4px; font-size: 11px; border-radius: 3px; }
+    .jcp-banner-row span { overflow-wrap: anywhere; }
     .jcp-section-bar { background: #0B2265; color: #fff; font-size: 10.5px; font-weight: 700; padding: 3px 8px; margin: 10px 0 4px; letter-spacing: .03em; }
     .jcp-kv-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 14px; margin-bottom: 3px; }
     .jcp-kv { font-size: 11.5px; margin-bottom: 2px; word-break: break-word; }
