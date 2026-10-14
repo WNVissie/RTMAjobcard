@@ -49,6 +49,14 @@ role keys, customer data or raw production records into conversation or commits.
 - Links in: `?case=CAS-...` opens the Job Card tab with that case searched;
   `?cases=CAS-1,CAS-2` opens the Bulk tab with them loaded.
 
+## User guide
+
+- `public/user-guide.html` (2026-10-14): short staff guide, opened by the blue **User Guide**
+  button in the header (`#userGuideBtn`). Self-contained, no data fetching, sample case numbers
+  only (never paste real records). Outside the login like any static file - keep it free of data.
+  **When the app's tabs, buttons or job card sections change, update the guide in the same change.**
+  Required by `scripts/check-build.mjs`.
+
 ## Job card rules (same as the dashboard, 2026-10-13/14)
 
 - Asset Repair History (Last 6 Months): the asset's earlier REPAIR cases only,

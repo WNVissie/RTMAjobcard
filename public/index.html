@@ -33,6 +33,8 @@
     .auth-box label { font-size: 12px; font-weight: 600; color: var(--muted); display: block; margin-bottom: 4px; }
     .auth-box input { width: 100%; }
     .auth-error { color: #b91c1c; font-size: 12px; min-height: 16px; }
+    #userGuideBtn { background: #0072CE; border-color: #0072CE; color: #fff; }
+    #userGuideBtn:hover { background: #005BA4; border-color: #005BA4; color: #fff; }
     .user-status { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
     /* bulk */
     .bulk-wrap { padding: 18px 24px 40px; display: grid; gap: 14px; max-width: 1200px; }
@@ -186,10 +188,13 @@
         <div class="subtitle">Job cards and logistics notes from live case data. Nothing here is saved to the server.</div>
       </div>
     </div>
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+    <button id="userGuideBtn" type="button" title="Open the Job Cards user guide in a new tab" onclick="window.open('/user-guide.html', '_blank', 'noopener')">User Guide</button>
     <span class="user-status" id="userStatus" style="display:none">
       <span id="userStatusEmail"></span>
       <button id="logoutBtn" type="button">Logout</button>
     </span>
+    </div>
   </header>
   <nav class="app-tabs" role="tablist">
     <button type="button" class="active" data-app-tab="jobCardTab">Job Card</button>

@@ -6,6 +6,7 @@ import fs from "node:fs";
 const required = [
   "public/index.html",
   "public/coolerco-logo.png",
+  "public/user-guide.html",
   "netlify/lib/common.js",
   "netlify/functions/jobcard-cases.js",
   "netlify/functions/jobcard-repairs.js",

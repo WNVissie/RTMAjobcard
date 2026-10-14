@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex, nofollow" />
+<title>Job Cards User Guide</title>
+<style>
+  /* Same look as the RTMA dashboard's user guide. Sample values only - never real case data. */
+  :root {
+    --bg: #f5f7fb; --panel: #ffffff; --ink: #17212f; --muted: #637083; --line: #d7dee8;
+    --blue: #00AEEF; --navy: #0B2265; --green: #16a34a; --red: #dc2626; --violet: #6B2D8B;
+    --shadow: 0 14px 34px rgba(15, 23, 42, .08);
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.55 "Segoe UI", system-ui, -apple-system, Arial, sans-serif; }
+  a { color: var(--navy); }
+  header.top { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 10px 24px; background: var(--panel); border-bottom: 1px solid var(--line); }
+  header.top img { height: 44px; width: auto; }
+  header.top h1 { margin: 0; font-size: 20px; }
+  header.top h1 .a { color: var(--blue); }
+  header.top h1 .b { color: var(--navy); }
+  .top-actions { margin-left: auto; display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn { display: inline-block; padding: 8px 12px; border: 1px solid var(--navy); border-radius: 8px; background: var(--navy); color: #fff; font-weight: 600; text-decoration: none; }
+  .wrap { max-width: 900px; margin: 0 auto; padding: 24px 16px 48px; }
+  nav.toc { display: flex; flex-wrap: wrap; gap: 6px 14px; margin-bottom: 22px; font-size: 14px; }
+  section { margin-bottom: 30px; scroll-margin-top: 80px; }
+  h2 { margin: 0 0 6px; font-size: 22px; color: var(--navy); }
+  .lead { margin: 0 0 14px; color: var(--muted); font-size: 16px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; box-shadow: var(--shadow); margin-bottom: 14px; }
+  .card h3 { margin: 0 0 8px; font-size: 17px; color: var(--navy); }
+  ol, ul { margin: 0; padding-left: 20px; }
+  li { margin-bottom: 6px; }
+  dl { display: grid; grid-template-columns: 210px minmax(0, 1fr); gap: 8px 16px; margin: 0; font-size: 14px; }
+  dt { font-weight: 700; color: var(--navy); }
+  dd { margin: 0; }
+  .kbd { display: inline-block; padding: 0 6px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 5px; background: #fff; font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .tip { margin-top: 10px; padding: 8px 12px; border-left: 4px solid var(--blue); background: #f0fbff; border-radius: 0 8px 8px 0; font-size: 14px; }
+  .warn { margin-top: 10px; padding: 8px 12px; border-left: 4px solid var(--red); background: #fff1f2; border-radius: 0 8px 8px 0; font-size: 14px; }
+  .mock { border: 1px dashed #9fb3c8; border-radius: 12px; padding: 12px; background: #fbfdff; margin: 12px 0; }
+  .mock-label { margin: 0 0 8px; color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+  .mock textarea { width: 100%; min-height: 70px; font: 13px Consolas, monospace; border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; resize: none; }
+  .bar { background: var(--navy); color: #fff; font-size: 12px; font-weight: 700; padding: 3px 8px; margin-top: 6px; }
+  .modes { display: flex; gap: 8px; flex-wrap: wrap; }
+  .mode { padding: 6px 12px; border-radius: 7px; font-size: 13px; font-weight: 600; border: 2px solid; }
+  .mode.r { border-color: var(--red); background: var(--red); color: #fff; }
+  .mode.l { border-color: var(--green); color: var(--green); }
+  @media (max-width: 640px) {
+    dl { grid-template-columns: 1fr; gap: 2px; }
+    dd { margin-bottom: 8px; }
+    header.top { padding: 10px 16px; }
+  }
+  @media print { header.top { position: static; } .top-actions, nav.toc { display: none; } }
+</style>
+</head>
+<body>
+  <header class="top">
+    <img src="/coolerco-logo.png" alt="CoolerCo" />
+    <h1><span class="a">CoolerCo</span> <span class="b">Job Cards · User Guide</span></h1>
+    <div class="top-actions"><a class="btn" href="/">Open Job Cards</a></div>
+  </header>
+
+  <div class="wrap">
+    <nav class="toc" aria-label="Contents">
+      <a href="#start">Getting started</a>
+      <a href="#single">One job card</a>
+      <a href="#card">What is on the card</a>
+      <a href="#bulk">Bulk job cards</a>
+      <a href="#faq">Questions</a>
+    </nav>
+
+    <section id="start">
+      <h2>Getting started</h2>
+      <p class="lead">Print a job card or a logistics service note for any RTMA case, filled in from live case data.</p>
+      <div class="card">
+        <ol>
+          <li>Open the app from the <b>CoolerCo SMART Hub</b> (tile <b>RTMA Job Cards</b>) - you are signed in automatically. Or go to <a href="https://rtmajobcard.netlify.app/">rtmajobcard.netlify.app</a> and sign in with your RTMA email and password (the same login as the RTMA dashboard).</li>
+          <li>Choose a tab: <span class="kbd">Job Card</span> for one case, or <span class="kbd">Bulk Job Cards</span> for many.</li>
+          <li>Print, or choose <b>Save as PDF</b> in the print window.</li>
+        </ol>
+        <div class="warn">Nothing is saved in the app. Edits, photos and signatures are lost when you close or reload the page, so print or save the PDF before you leave.</div>
+      </div>
+    </section>
+
+    <section id="single">
+      <h2>One job card</h2>
+      <p class="lead">Search a case, check the details, add anything missing, print.</p>
+      <div class="card">
+        <ol>
+          <li>Type the case number in <b>Search Case</b> (for example <span class="kbd">CAS-0000123-DEMO</span>) and press <span class="kbd">Search</span> or Enter.</li>
+          <li>The card fills in: store, address, dates, technician, asset, the asset's earlier repair cases and this case's repairs. The preview on the right shows the card exactly as it will print.</li>
+          <li>The type is picked for you from the case type:
+            <div class="modes" style="margin:6px 0">
+              <span class="mode r">Repair Job Card</span><span class="mode l">Logistics Service Note</span>
+            </div>
+            Repairs get a job card; deliveries, removals, replacements and warehouse cases get a logistics service note. Click the other button to switch.</li>
+          <li>Change any field on the left if it is wrong or empty. Use <span class="kbd">+ Add row</span> to add a repair or a symptom.</li>
+          <li>Optional: add <b>photos</b> of the asset, and a <b>signature</b> - draw it in the box and click <b>Use drawn signature</b>, or upload a picture of a signed page.</li>
+          <li>Click <span class="kbd">Print / Save as PDF</span>. Cards print on A4, portrait.</li>
+        </ol>
+        <div class="tip">The print button turns green once you have printed, so you can see which card is done.</div>
+      </div>
+    </section>
+
+    <section id="card">
+      <h2>What is on the card</h2>
+      <div class="card">
+        <div class="mock" aria-hidden="true">
+          <p class="mock-label">Job card sections (sample)</p>
+          <div class="bar">Service No: CAS-0000123-DEMO · Type: Repair at Shopper POS · Date · Technician</div>
+          <div class="bar">Location Information</div><div class="bar">Service Dates</div><div class="bar">Asset Information</div>
+          <div class="bar">Asset Repair History (Last 6 Months)</div><div class="bar">Repairs Performed (This Case)</div>
+          <div class="bar">Symptoms</div><div class="bar">Signature</div>
+        </div>
+        <dl>
+          <dt>Asset Repair History</dt><dd>The asset's <b>earlier repair cases</b> in the last 6 months, one line per case, with the outcome. Deliveries, removals and this case itself are not listed.</dd>
+          <dt>Repairs Performed (This Case)</dt><dd>The repair lines recorded on <b>this case only</b>, from the repairs upload. If it says none were found, the repairs for this case have not been uploaded yet - add them by hand if you know them.</dd>
+          <dt>Symptoms</dt><dd>Blank lines for the technician to fill in.</dd>
+          <dt>Faults Found</dt><dd>Not shown yet - still being developed.</dd>
+          <dt>Logistics Service Note</dt><dd>Store, dates and driver, with the asset delivered and the asset removed (barcode, model, condition), and a signature page.</dd>
+        </dl>
+      </div>
+    </section>
+
+    <section id="bulk">
+      <h2>Bulk job cards</h2>
+      <p class="lead">Print many cases at once - one card per page.</p>
+      <div class="card">
+        <ol>
+          <li>Open <span class="kbd">Bulk Job Cards</span> and paste the case numbers - one per line, or separated by commas or spaces. Up to 200 at a time.
+            <div class="mock" aria-hidden="true">
+              <p class="mock-label">Example</p>
+              <textarea readonly>CAS-0000123-DEMO
+CAS-0000124-DEMO, CAS-0000125-DEMO</textarea>
+            </div></li>
+          <li>Click <span class="kbd">Load cases</span>. The cases are listed with store, warehouse, status and technician. Case numbers that could not be found are listed in red - check them for typos.</li>
+          <li>Untick any case you don't want (or use <b>Select all</b>).</li>
+          <li>Click <span class="kbd">Print Job Cards</span> or <span class="kbd">Print Logistics Notes</span>. A new window opens with one page per case; it prints when ready.</li>
+        </ol>
+        <div class="tip">Allow pop-ups for the site if nothing opens. Bulk cards can't be edited - for a card that needs changes, use the <b>Job Card</b> tab.</div>
+      </div>
+    </section>
+
+    <section id="faq">
+      <h2>Questions</h2>
+      <div class="card">
+        <dl>
+          <dt>"Case not found"</dt><dd>Check the case number. Cases appear once they have been uploaded to the RTMA dashboard (usually daily), so a very new case may not be there yet.</dd>
+          <dt>No repairs on the card</dt><dd>The repair lines for that case have not been uploaded yet. You can add them by hand before printing.</dd>
+          <dt>No repair history</dt><dd>The asset had no other repair cases in the last 6 months, or the case has no asset recorded.</dd>
+          <dt>The login screen keeps coming back</dt><dd>Your session expired - sign in again. Opening the app from the SMART Hub signs you in automatically.</dd>
+          <dt>Can I save the card in the app?</dt><dd>No. Use <b>Save as PDF</b> in the print window and keep the file.</dd>
+        </dl>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
