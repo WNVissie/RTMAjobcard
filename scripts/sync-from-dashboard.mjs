@@ -53,7 +53,8 @@ if (/\/api\/(?!jobcard-)/.test(jcJs + bulkJs)) throw new Error("Copied code call
 
 // Bulk printing takes its cases from the Bulk tab's selection.
 must(bulkJs, "const rows = selectedCaseRows();", "Bulk JS");
-bulkJs = bulkJs.replace("const rows = selectedCaseRows();", "const rows = bulkSelectedRows();");
+// Every selection lookup (print and ZIP) uses the Bulk tab's selection here.
+bulkJs = bulkJs.split("selectedCaseRows()").join("bulkSelectedRows()");
 bulkJs = bulkJs.split("Generated via RTMA Dashboard").join("Generated via RTMA Job Cards");
 jcJs = jcJs.split("Generated via RTMA Dashboard").join("Generated via RTMA Job Cards");
 

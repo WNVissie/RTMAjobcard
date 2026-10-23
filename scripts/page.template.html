@@ -125,6 +125,7 @@
             <span class="bulk-note" id="bulkCount"></span>
             <span style="flex:1"></span>
             <button type="button" class="bulk-print" id="bulkPrintJobBtn">Print Job Cards</button>
+            <button type="button" class="bulk-print" id="bulkZipJobBtn" title="One PDF per case, named with its case number, in one ZIP">Job Cards (ZIP)</button>
             <button type="button" class="bulk-print" id="bulkPrintLogBtn">Print Logistics Notes</button>
           </div>
           <div class="bulk-note bad" id="bulkMissing"></div>
@@ -282,6 +283,7 @@
       });
       document.getElementById('bulkRows').addEventListener('change', bulkUpdateCount);
       document.getElementById('bulkPrintJobBtn').addEventListener('click', () => printBulkCaseDocuments('jobcard'));
+      document.getElementById('bulkZipJobBtn').addEventListener('click', event => downloadBulkCaseDocumentsZip('jobcard', event.currentTarget));
       document.getElementById('bulkPrintLogBtn').addEventListener('click', () => printBulkCaseDocuments('logistics'));
 
       const params = new URLSearchParams(location.search);

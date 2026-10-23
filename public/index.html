@@ -388,6 +388,7 @@
             <span class="bulk-note" id="bulkCount"></span>
             <span style="flex:1"></span>
             <button type="button" class="bulk-print" id="bulkPrintJobBtn">Print Job Cards</button>
+            <button type="button" class="bulk-print" id="bulkZipJobBtn" title="One PDF per case, named with its case number, in one ZIP">Job Cards (ZIP)</button>
             <button type="button" class="bulk-print" id="bulkPrintLogBtn">Print Logistics Notes</button>
           </div>
           <div class="bulk-note bad" id="bulkMissing"></div>
@@ -1065,7 +1066,7 @@
         <div class="jcp-head">
           <div class="jcp-org">RTMA Group</div>
           <div class="jcp-title">${escapeAttr(title)}</div>
-          <div class="jcp-sub">Generated from Case Records</div>
+          <div class="jcp-sub">Document No: ${escapeAttr(caseNo || '—')} &middot; Generated from Case Records</div>
         </div>
         <div class="jcp-banner-row">
           <span><b>Service No:</b> ${escapeAttr(caseNo || '—')}</span>
@@ -1108,26 +1109,8 @@
         <div class="jcp-footer">Generated via RTMA Job Cards &middot; Bulk ${escapeAttr(isLogistics ? 'Logistics Notes' : 'Job Cards')} &middot; ${escapeAttr(new Date().toLocaleDateString('en-ZA'))}</div>
       </section>`;
     }
-    async function printBulkCaseDocuments(mode) {
-      const rows = bulkSelectedRows();
-      if (!rows.length) { alert('Select one or more cases first.'); return; }
-      const title = mode === 'logistics' ? 'Bulk Logistics Notes' : 'Bulk Job Cards';
-      // Open the window before any await so the popup blocker allows it.
-      const win = window.open('', '_blank');
-      if (!win) { alert('Please allow popups to generate the bulk document.'); return; }
-      let extras = new Map();
-      if (mode !== 'logistics') {
-        win.document.write(`<!doctype html><html><head><title>${escapeAttr(title)}</title></head><body style="font-family:Segoe UI,Arial,sans-serif;padding:24px;color:#0B2265">Loading repairs and asset repair history for ${rows.length} case(s)...</body></html>`);
-        win.document.close();
-        try {
-          extras = await bulkJobCardExtras(rows, (done, total) => {
-            if (!win.closed && win.document.body) win.document.body.textContent = `Loading asset repair history... ${done} of ${total} asset(s)`;
-          });
-        } catch (_) { extras = new Map(); }
-        if (win.closed) return;
-        win.document.open();
-      }
-      win.document.write(`<!doctype html><html><head><title>${escapeAttr(title)}</title><style>
+    // Print styles shared by the print window and the per-case PDFs.
+    const BULK_DOC_CSS = `
         @page{size:A4 portrait;margin:12mm}
         body{margin:0;background:#fff;color:#17212f;font-family:Segoe UI,Arial,sans-serif}
         .jc-page{background:#fff;color:#0f172a;margin:0 auto 18px;max-width:760px;padding:24px 28px;page-break-after:always;box-sizing:border-box}
@@ -1149,10 +1132,110 @@
         .jcp-blank-row td{height:20px}
         .jcp-footer{color:#637083;font-size:10px;margin-top:14px;text-align:center}
         @media print{.jc-page{margin:0;max-width:none;width:100%;padding:0}}
-      </style></head><body>${rows.map(row => bulkJobDocumentHtml(row, mode, extras.get(row))).join('')}</body></html>`);
+      `;
+    async function printBulkCaseDocuments(mode) {
+      const rows = bulkSelectedRows();
+      if (!rows.length) { alert('Select one or more cases first.'); return; }
+      const title = mode === 'logistics' ? 'Bulk Logistics Notes' : 'Bulk Job Cards';
+      // Open the window before any await so the popup blocker allows it.
+      const win = window.open('', '_blank');
+      if (!win) { alert('Please allow popups to generate the bulk document.'); return; }
+      let extras = new Map();
+      if (mode !== 'logistics') {
+        win.document.write(`<!doctype html><html><head><title>${escapeAttr(title)}</title></head><body style="font-family:Segoe UI,Arial,sans-serif;padding:24px;color:#0B2265">Loading repairs and asset repair history for ${rows.length} case(s)...</body></html>`);
+        win.document.close();
+        try {
+          extras = await bulkJobCardExtras(rows, (done, total) => {
+            if (!win.closed && win.document.body) win.document.body.textContent = `Loading asset repair history... ${done} of ${total} asset(s)`;
+          });
+        } catch (_) { extras = new Map(); }
+        if (win.closed) return;
+        win.document.open();
+      }
+      win.document.write(`<!doctype html><html><head><title>${escapeAttr(title)}</title><style>${BULK_DOC_CSS}</style></head><body>${rows.map(row => bulkJobDocumentHtml(row, mode, extras.get(row))).join('')}</body></html>`);
       win.document.close();
       win.focus();
       win.print();
+    }
+    function bulkLoadScript(url) {
+      window.__bulkScriptLoads = window.__bulkScriptLoads || {};
+      if (!window.__bulkScriptLoads[url]) {
+        window.__bulkScriptLoads[url] = new Promise((resolve, reject) => {
+          const el = document.createElement('script');
+          el.src = url;
+          el.onload = () => resolve();
+          el.onerror = () => { delete window.__bulkScriptLoads[url]; reject(new Error('Could not load ' + url)); };
+          document.head.appendChild(el);
+        });
+      }
+      return window.__bulkScriptLoads[url];
+    }
+    // One PDF per selected case, named and numbered with its case number
+    // (CAS-....pdf), all in one ZIP. Same layout as the print window.
+    async function downloadBulkCaseDocumentsZip(mode, btn) {
+      const rows = bulkSelectedRows();
+      if (!rows.length) { alert('Select one or more cases first.'); return; }
+      const label = mode === 'logistics' ? 'Logistics_Notes' : 'Job_Cards';
+      const original = btn ? btn.textContent : '';
+      const status = text => { if (btn) btn.textContent = text; };
+      if (btn) btn.disabled = true;
+      const frame = document.createElement('iframe');
+      try {
+        status('Loading PDF tools...');
+        await Promise.all([
+          bulkLoadScript('https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js'),
+          bulkLoadScript('https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'),
+          bulkLoadScript('https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js')
+        ]);
+        let extras = new Map();
+        if (mode !== 'logistics') {
+          try { extras = await bulkJobCardExtras(rows, (done, total) => status(`Loading history ${done} of ${total}...`)); }
+          catch (_) { extras = new Map(); }
+        }
+        // Render in a hidden A4-wide frame so the dashboard's own styles don't apply.
+        frame.setAttribute('aria-hidden', 'true');
+        frame.style.cssText = 'position:fixed;left:-10000px;top:0;width:794px;height:1123px;border:0;visibility:hidden';
+        document.body.appendChild(frame);
+        const doc = frame.contentDocument;
+        doc.open();
+        doc.write(`<!doctype html><html><head><style>${BULK_DOC_CSS}.jc-page{margin:0;max-width:none;width:794px}</style></head><body style="margin:0"></body></html>`);
+        doc.close();
+        const zip = new window.JSZip();
+        const used = new Map();
+        for (let i = 0; i < rows.length; i += 1) {
+          status(`Building PDF ${i + 1} of ${rows.length}...`);
+          const row = rows[i];
+          const caseNo = String(row['Case Number'] || '').trim();
+          doc.body.innerHTML = bulkJobDocumentHtml(row, mode, extras.get(row));
+          const canvas = await window.html2canvas(doc.body.firstElementChild, { scale: 2, backgroundColor: '#ffffff', windowWidth: 794 });
+          const pdf = new window.jspdf.jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+          const margin = 10, w = pdf.internal.pageSize.getWidth() - 2 * margin, h = pdf.internal.pageSize.getHeight() - 2 * margin;
+          const sliceH = Math.floor(canvas.width * h / w);
+          for (let y = 0, page = 0; y < canvas.height; y += sliceH, page += 1) {
+            const part = document.createElement('canvas');
+            part.width = canvas.width; part.height = Math.min(sliceH, canvas.height - y);
+            part.getContext('2d').drawImage(canvas, 0, y, canvas.width, part.height, 0, 0, canvas.width, part.height);
+            if (page) pdf.addPage();
+            pdf.addImage(part.toDataURL('image/jpeg', 0.92), 'JPEG', margin, margin, w, part.height * w / canvas.width);
+          }
+          pdf.setProperties({ title: caseNo || `Case ${i + 1}`, subject: mode === 'logistics' ? 'Logistics Service Note' : 'Job Card' });
+          const base = (caseNo || `case-${i + 1}`).replace(/[\\/:*?"<>|]+/g, '-');
+          const n = (used.get(base) || 0) + 1; used.set(base, n);
+          zip.file(`${n > 1 ? `${base} (${n})` : base}.pdf`, pdf.output('arraybuffer'));
+        }
+        status('Zipping...');
+        const blob = await zip.generateAsync({ type: 'blob' });
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = `${label}_${new Date().toISOString().slice(0, 10)}_${rows.length}.zip`;
+        document.body.appendChild(link); link.click(); link.remove();
+        setTimeout(() => URL.revokeObjectURL(link.href), 60000);
+      } catch (err) {
+        alert('Could not build the ZIP: ' + err.message);
+      } finally {
+        frame.remove();
+        if (btn) { btn.textContent = original; btn.disabled = !bulkSelectedRows().length; }
+      }
     }
 
     // ---- Bulk tab: paste case numbers -> pick -> print ----
@@ -1224,6 +1307,7 @@
       });
       document.getElementById('bulkRows').addEventListener('change', bulkUpdateCount);
       document.getElementById('bulkPrintJobBtn').addEventListener('click', () => printBulkCaseDocuments('jobcard'));
+      document.getElementById('bulkZipJobBtn').addEventListener('click', event => downloadBulkCaseDocumentsZip('jobcard', event.currentTarget));
       document.getElementById('bulkPrintLogBtn').addEventListener('click', () => printBulkCaseDocuments('logistics'));
 
       const params = new URLSearchParams(location.search);
